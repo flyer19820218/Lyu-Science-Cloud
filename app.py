@@ -11,7 +11,7 @@ except ImportError:
     st.stop()
 
 # --- 1. 頁面配置 (深度白晝協議 + 側邊欄加大一倍) [cite: 2026-02-03] ---
-st.set_page_config(page_title="理化 AI 雞排珍奶實驗室", layout="wide")
+st.set_page_config(page_title="自然曉臻助教", layout="wide")
 
 st.markdown("""
     <style>
@@ -93,8 +93,8 @@ SYSTEM_PROMPT = """
 """
 
 # --- 5. 右側主畫面：PDF 呈現與備課按鈕 [cite: 2026-02-03] ---
-st.title("🚀 理化 AI 雞排珍奶實驗室 (實體課對應版)")
-pdf_path = os.path.join("data", "Ph_Ch_finals.pdf") # 鎖定檔案路徑
+st.title("🚀 自然助教曉臻老師")
+pdf_path = os.path.join("data", "二下第一章.pdf") # 鎖定檔案路徑
 
 if user_key and os.path.exists(pdf_path):
     genai.configure(api_key=user_key)
