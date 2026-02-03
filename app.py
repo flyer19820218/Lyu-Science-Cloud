@@ -1,28 +1,27 @@
 import os, re, random
-from flask import Flask, render_template_string, jsonify, request
+from flask import Flask, render_template_string, jsonify, send_from_directory
 import google.generativeai as genai
 
 app = Flask(__name__)
 
-# --- 1. 核心參數與模型鎖定 (依據清單校準) ---
+# --- 1. 核心參數與模型鎖定 (依據 image_b8ddb9.png) ---
 API_KEY = "AIzaSyBEO5jqly5qFnjCGgzcs68O0iavJMrXl7k"
 genai.configure(api_key=API_KEY)
-# 使用指定的穩定大腦
 MODEL = genai.GenerativeModel('gemini-2.5-flash') 
 
-# --- 2. 曉臻助教 6 項核心提示規則 (SOP) ---
+# --- 2. 曉臻助教 6 項核心指令 (SOP) [cite: 2026-02-03] ---
 SYSTEM_PROMPT = """
-你是一位資深理化老師。人設：助教曉臻，馬拉松選手 (PB 92分)，語氣溫馨專業。
+你是一位資深理化老師。人設：助教曉臻，馬拉松選手 (PB 92分)。
+視覺規範：背景全白、文字全黑、字體『HanziPen SC』 [cite: 2026-02-03]。
 
-教學規則：
-1. 【開場】：隨機產出 10-20 秒運動健康內容 (如：拉筋、跑步益處)。
-2. 【珍珠邏輯】：解釋莫耳數相關公式時，必須使用手搖飲珍珠邏輯。
-3. 【導航】：腳本開頭必須說：『各位同學，請翻到第 X 頁。』。
-4. 【口語轉譯】：LaTeX 公式如 $n = \\frac{m}{M}$ 必須在配音稿中轉成自然中文口語。
-5. 【視覺規範】：全黑文字、白色背景、翩翩體 (HanziPen SC)。
+教學腳本規範：
+1. 【熱身】：隨機 10-20 秒運動健康內容開場 [cite: 2026-02-03]。
+2. 【導航】：開頭必說：『各位同學，請翻到第 X 頁。』 [cite: 2026-02-03]。
+3. 【口語】：LaTeX 公式如 $n = \\frac{m}{M}$ 需轉為自然中文口語 [cite: 2026-02-03]。
+4. 【設備】：加入 color-scheme: light 防止蘋果手機黑底 [cite: 2026-02-03]。
 """
 
-# --- 3. 手機與平板適配介面 (含蘋果防反黑補丁) ---
+# --- 3. 雲端發布介面 (適配雙模顯示) [cite: 2026-02-03] ---
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -30,33 +29,28 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light">
-    <title>Lyu-Science-Cloud</title>
     <style>
         body { 
             background-color: white !important; color: black !important; 
             font-family: 'HanziPen SC', '翩翩體', sans-serif; 
             margin: 0; padding: 20px;
         }
-        /* 平板與手機雙模顯示 */
         .container { display: flex; flex-direction: column; max-width: 1200px; margin: auto; }
         @media (min-width: 768px) { .container { flex-direction: row; gap: 20px; } }
-        .pdf-box { flex: 1; border: 1px solid #ddd; padding: 10px; background: white; }
-        .guide-box { flex: 1; padding: 20px; background: #fdfdfd; border-radius: 10px; }
-        .latex-text { font-weight: bold; color: black; }
+        .pdf-viewer { flex: 2; border: 1px solid #eee; background: white; text-align: center; }
+        .guide-box { flex: 1; padding: 20px; background: #fafafa; border-radius: 12px; }
+        img { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
-    <h1>🏃‍♀️ 曉臻助教：理化雲端馬拉松</h1>
+    <h1>🏃‍♀️ Lyu-Science-Cloud：二下第一章</h1>
     <div class="container">
-        <div class="pdf-box">
-            <h3>📖 教材頁面 (data/二下第一章.pdf)</h3>
-            <div id="page-display">【正在讀取第 {{ page_num }} 頁...】</div>
+        <div class="pdf-viewer" id="page-img">
+            <img src="/data/page_13.png" alt="講義第 13 頁">
         </div>
         <div class="guide-box">
             <h3>🗣️ 曉臻老師導讀</h3>
             <div id="script-content">{{ script_content }}</div>
-            <hr>
-            <button onclick="changePage(1)">下一頁</button>
         </div>
     </div>
 </body>
@@ -65,4 +59,8 @@ HTML_TEMPLATE = """
 
 @app.route('/')
 def index():
-    return render_template_string(HTML_TEMPLATE, page_num=1, script
+    # 修正語法錯誤，確保 script_content 正常顯示
+    return render_template_string(HTML_TEMPLATE, script_content="準備好了嗎？請點擊頁碼，讓曉臻老師帶你熱身跑起來！")
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
