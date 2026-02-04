@@ -25,31 +25,34 @@ st.markdown("""
     [data-testid="stSidebar"] { min-width: 300px !important; max-width: 300px !important; }
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
 
-    /* 3. 🛠️ 「打開/闔上」按鈕強力修復協議 (解決 keyboard_double_ 殘留) */
-    button[data-testid="stSidebarCollapseButton"] {
-        font-size: 0px !important;     /* 強制讓原本的英文文字消失 */
-        color: transparent !important; /* 讓原本的顏色透明 */
-        width: auto !important;
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-    }
-    button[data-testid="stSidebarCollapseButton"] svg {
-        display: none !important;      /* 隱藏原本壞掉的箭頭圖示 */
-    }
-    /* 重新注入中文「闔上」標籤 */
-    button[data-testid="stSidebarCollapseButton"]::after {
-        content: "闔上 ◀"; 
-        font-size: 1.1rem !important;
-        color: #000000 !important;
-        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
-        font-weight: bold;
-        visibility: visible;
-    }
-    /* 當側邊欄「處於收合狀態」時，注入中文「打開」標籤 */
-    [data-testid="stSidebar"][aria-expanded="false"] + section button[data-testid="stSidebarCollapseButton"]::after {
-        content: "▶ 打開";
-        padding-left: 5px;
-    }
+    /* 3. 🛠️ 「打開/闔上」按鈕強力修復協議 (對齊與視覺風格鎖定) */
+button[data-testid="stSidebarCollapseButton"] {
+    font-size: 0px !important;
+    color: transparent !important;
+    width: 100px !important;
+    background-color: transparent !important;
+}
+
+button[data-testid="stSidebarCollapseButton"] svg {
+    display: none !important;
+}
+
+/* 預設狀態 (側邊欄開啟時)：顯示「闔上 ◀」 */
+button[data-testid="stSidebarCollapseButton"]::after {
+    content: "闔上 ◀";
+    font-size: 1.1rem !important;
+    color: #000000 !important;
+    font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
+    font-weight: bold;
+    visibility: visible;
+}
+
+/* 當側邊欄「收合」後，強制變更為「▶ 打開」 */
+[data-testid="stHeader"] button[data-testid="stSidebarCollapseButton"]::after {
+    content: "▶ 打開" !important;
+    padding-left: 10px;
+    visibility: visible;
+}
 
     /* 4. 📸 檔案上傳區中文化 [cite: 2026-02-03] */
     section[data-testid="stFileUploadDropzone"] span { visibility: hidden; }
