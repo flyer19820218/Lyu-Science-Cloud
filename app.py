@@ -3,30 +3,30 @@ import google.generativeai as genai
 import os, asyncio, edge_tts, re, base64, io, random
 from PIL import Image
 
-# --- 零件檢查 ---
+# --- 零件檢查 [cite: 2026-02-03] ---
 try:
     import fitz # pymupdf
 except ImportError:
     st.error("❌ 零件缺失！請確保已安裝 pymupdf 與 edge-tts。")
     st.stop()
 
-# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄恆定展開) ---
+# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄恆定展開) [cite: 2026-02-03] ---
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
     <style>
-    /* 1. 全局視覺鎖定 (白底黑字翩翩體) */
+    /* 1. 全局視覺鎖定 (白底黑字翩翩體) [cite: 2026-02-03] */
     .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { 
         background-color: #ffffff !important; 
     }
     
-    /* 2. 側邊欄固定協議：鎖定寬度 320px */
+    /* 2. 側邊欄固定協議：鎖定寬度 320px [cite: 2026-02-03] */
     [data-testid="stSidebar"] { 
         min-width: 320px !important; 
         max-width: 320px !important; 
     }
     
-    /* 3. 側邊欄按鈕絕對隱藏 (防止文字殘留) */
+    /* 3. 側邊欄按鈕絕對隱藏 (防止文字殘留) [cite: 2026-02-03] */
     button[data-testid="stSidebarCollapseButton"],
     button[data-testid="stSidebarCollapseButton"] > * {
         display: none !important;
@@ -38,17 +38,23 @@ st.markdown("""
         opacity: 0 !important;
     }
 
-    /* 4. 輸入框美化修復：純白圖塊 + 溫柔邊框 */
-    /* 修正點：背景改回白色，加入 1px 淺灰邊框，自然形成方框 */
-    [data-baseweb="input"], [data-testid="stNumberInput"] div, [data-testid="stTextInput"] div {
+    /* 4. 輸入元件美化修復：純白圖塊 + 溫柔邊框 [cite: 2026-02-03] */
+    /* 涵蓋 Input, NumberInput, Selectbox */
+    [data-baseweb="input"], [data-baseweb="select"], [data-testid="stNumberInput"] div, [data-testid="stTextInput"] div, [data-testid="stSelectbox"] > div > div {
         background-color: #ffffff !important;  /* 白色圖塊 */
-        border: 1px solid #d1d5db !important;  /* 淺灰色邊框 (取代醜黑線) */
+        border: 1px solid #d1d5db !important;  /* 淺灰色邊框 */
         border-radius: 6px !important;         /* 微微圓角 */
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; /* 增加一點點立體感 */
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    }
+    
+    /* 修正下拉選單內部的顏色 */
+    [data-baseweb="select"] > div {
+        background-color: #ffffff !important;
+        color: #000000 !important;
     }
     
     /* 確保輸入文字是深黑色的 */
-    [data-baseweb="input"] input {
+    [data-baseweb="input"] input, [data-baseweb="select"] div {
         color: #000000 !important;
     }
 
@@ -91,9 +97,8 @@ st.title("🏃‍♀️ 臻 · 極速自然能量域")
 st.markdown("### 🔬 資深理化老師 AI 助教：曉臻老師陪你衝刺科學馬拉松")
 st.divider()
 
-# --- 2. 曉臻語音引擎 (口語轉譯版) ---
+# --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
-    # 確保曉臻只唸翻譯好的口語中文
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
@@ -102,8 +107,8 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
-# --- 3. 側邊欄：曉臻的科學動能控制塔 ---
-st.sidebar.title("🚪打開實驗室大門-申請金鑰")
+# --- 3. 側邊欄：曉臻的科學動能控制塔 [cite: 2026-02-03] ---
+st.sidebar.title("🚪 科學動能控制塔")
 st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南：</b><br>
@@ -119,7 +124,7 @@ st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", placeholder="例如：什麼是質量守恆？", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
-# --- 4. 曉臻教學 6 項核心指令 (真理對答案完整回歸版) ---
+# --- 4. 曉臻教學 6 項核心指令 (真理對答案完整回歸版) [cite: 2026-02-03] ---
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
 
@@ -133,37 +138,60 @@ SYSTEM_PROMPT = """
    - 例如：O2 寫作「O～～ two～～」。
    - 例如：H2O2 寫作「H～～ two～～ O～～ two～～」。
    - 例如：n = m/M 寫作「n～～ 等於～～ m～～ 除以～～ M～～」。
-   - 這樣做能確保聲紋穩定，且讓曉臻唸得清楚有韻律感。
+   - 這樣做能確保聲紋穩定，且讓曉臻唸得清楚有韻律感。 [cite: 2026-02-03]
 6. 【真理激勵】：結尾必喊『這就是自然科學的真理！』並鼓勵同學不要在馬拉松半路放棄。
 """
 
-target_page = st.number_input("📍 請輸入/選擇講義頁碼 (1-64)", 1, 64, 1, key="main_pg")
+# --- 5. 新增：三欄式系統導航 (冊別 | 章節 | 頁碼) ---
+col1, col2, col3 = st.columns([1, 1, 1])
 
-pdf_path = os.path.join("data", "二下第一章.pdf")
+with col1:
+    # 這裡的選項可以根據你的檔案庫擴充
+    vol_select = st.selectbox("📚 冊別選擇", ["第一冊", "第二冊", "第三冊", "二下(第四冊)", "第五冊", "第六冊"], index=3)
+
+with col2:
+    chap_select = st.selectbox("🧪 章節選擇", ["第一章", "第二章", "第三章", "第四章", "第五章", "第六章"], index=0)
+
+with col3:
+    target_page = st.number_input("📄 講義頁碼", 1, 100, 1, key="main_pg")
+
+# 檔名組合邏輯 (暫時映射回你原本的檔案，方便測試)
+# 實際上你未來的檔案結構可能是 data/第四冊/第一章.pdf
+if vol_select == "二下(第四冊)" and chap_select == "第一章":
+    filename = "二下第一章.pdf"
+else:
+    # 這裡只是一個範例，未來你可以改成 f"{vol_select}_{chap_select}.pdf"
+    filename = f"{vol_select}_{chap_select}.pdf"
+
+pdf_path = os.path.join("data", filename)
 
 if os.path.exists(pdf_path):
     doc = fitz.open(pdf_path)
-    page = doc.load_page(target_page - 1)
-    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
-    img_data = Image.open(io.BytesIO(pix.tobytes()))
-    
-    st.image(img_data, use_container_width=True) 
-    st.divider()
-    
-    if st.button("🏃‍♀️ 曉臻：心率同步，進入備課衝刺！"):
-        if not user_key:
-            st.warning("⚠️ 值日生請注意：尚未轉動啟動金鑰！")
-        else:
-            with st.spinner("曉臻正在努力備課中，請稍等!你可以先喝杯珍奶..."):
-                try:
-                    genai.configure(api_key=user_key)
-                    MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
-                    prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。若有練習題請先讓學生練習，然後對答案並解說。"
-                    res = MODEL.generate_content([prompt, img_data])
-                    
-                    st.info(f"🔊 曉臻正在進行音速破風導讀！")
-                    st.markdown(asyncio.run(generate_voice_base64(res.text)), unsafe_allow_html=True)
-                    st.balloons()
-                except Exception as e: st.error(f"❌ 控制塔連線失敗：{e}")
+    # 防止頁碼超出範圍
+    if target_page - 1 < len(doc):
+        page = doc.load_page(target_page - 1)
+        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+        img_data = Image.open(io.BytesIO(pix.tobytes()))
+        
+        st.image(img_data, use_container_width=True) 
+        st.divider()
+        
+        if st.button("🏃‍♀️ 曉臻：心率同步，進入備課衝刺！"):
+            if not user_key:
+                st.warning("⚠️ 值日生請注意：尚未轉動啟動金鑰！")
+            else:
+                with st.spinner("曉臻正在努力備課中，請稍等!你可以先喝杯珍奶..."):
+                    try:
+                        genai.configure(api_key=user_key)
+                        MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
+                        prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。若有練習題請先讓學生練習，然後對答案並解說。"
+                        res = MODEL.generate_content([prompt, img_data])
+                        
+                        st.info(f"🔊 曉臻正在進行音速破風導讀！")
+                        st.markdown(asyncio.run(generate_voice_base64(res.text)), unsafe_allow_html=True)
+                        st.balloons()
+                    except Exception as e: st.error(f"❌ 控制塔連線失敗：{e}")
+    else:
+        st.warning(f"⚠️ 這一章只有 {len(doc)} 頁喔！跑過頭了！")
 else:
-    st.error(f"❌ 找不到講義：{pdf_path}")
+    st.error(f"❌ 目前資料庫還沒有：{filename}，請先上傳 PDF 到 data 資料夾。")
