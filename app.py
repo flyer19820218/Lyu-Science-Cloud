@@ -18,6 +18,12 @@ st.markdown("""
     .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { 
         background-color: #ffffff !important; 
     }
+    
+    /* 修正：強制所有輸入區塊背景為白色，防止說明文字被蓋掉 */
+    [data-testid="stNumberInput"], [data-testid="stTextInput"], [data-baseweb="input"] {
+        background-color: #ffffff !important;
+    }
+
     html, body, .stMarkdown, p, span, label, li {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
@@ -49,7 +55,7 @@ st.markdown("""
         visibility: visible;
     }
 
-    /* 當側邊欄「收合」後，按鈕移至 Header，強制顯示為「▶ 打開」 */
+    /* 當側邊欄「收合」後，強制顯示為「▶ 打開」 */
     [data-testid="stHeader"] button[data-testid="stSidebarCollapseButton"]::after {
         content: "▶ 打開" !important;
         padding-left: 10px;
@@ -140,7 +146,7 @@ if os.path.exists(pdf_path):
     pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
     img_data = Image.open(io.BytesIO(pix.tobytes()))
     
-    st.image(img_data, use_container_width=True) # 修正為最新的 Streamlit 參數
+    st.image(img_data, use_container_width=True) 
     st.divider()
     
     if st.button("🏃‍♀️ 曉臻：心率同步，進入備課衝刺！"):
@@ -150,8 +156,7 @@ if os.path.exists(pdf_path):
             with st.spinner("曉臻正在努力備課中，請稍等!你可以先喝杯珍奶..."):
                 try:
                     genai.configure(api_key=user_key)
-                    # 鎖定模型為 gemini-2.0-flash 或 gemini-1.5-flash (根據環境調整)
-                    MODEL = genai.GenerativeModel('gemini-1.5-flash') 
+                    MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
                     prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。若有練習題請先讓學生練習，然後對答案並解說。"
                     res = MODEL.generate_content([prompt, img_data])
                     
