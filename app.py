@@ -11,7 +11,6 @@ except ImportError:
     st.stop()
 
 # --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄恆定展開) [cite: 2026-02-03] ---
-# initial_sidebar_state="expanded" 確保預設就是打開的
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -27,16 +26,20 @@ st.markdown("""
         max-width: 320px !important; 
     }
     
-    /* 3. 核心修復：徹底移除開合按鈕 (Display None) [cite: 2026-02-03] */
-    /* 讓按鈕完全消失，使用者無法點擊，也看不到任何殘留文字 */
-    button[data-testid="stSidebarCollapseButton"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-    
-    /* 避免手機版或小螢幕出現浮動的漢堡選單，如果你希望手機版也能固定側邊欄，可以加上這段 */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: none !important;
+    /* 3. ☢️ 核災級隱藏修復：針對頑固的 keyboard_double_arrow_right 文字 [cite: 2026-02-03] */
+    /* 針對按鈕本身以及它裡面所有的子元素 (svg, span, div) */
+    button[data-testid="stSidebarCollapseButton"],
+    button[data-testid="stSidebarCollapseButton"] > *, 
+    button[data-testid="stSidebarCollapseButton"] span,
+    [data-testid="stSidebarNav"] button {
+        display: none !important;        /* 1. 結構上移除 */
+        visibility: hidden !important;   /* 2. 視覺上隱藏 */
+        height: 0px !important;          /* 3. 高度壓扁 */
+        width: 0px !important;           /* 4. 寬度壓扁 */
+        font-size: 0px !important;       /* 5. 字體歸零 (這招專門對付文字殘留) */
+        color: transparent !important;   /* 6. 顏色透明 (這招是對付顯示出來的黑字) */
+        overflow: hidden !important;     /* 7. 超出範圍切除 */
+        opacity: 0 !important;           /* 8. 透明度歸零 */
     }
 
     /* 4. 輸入框外框校準：強制顯示黑色外框 [cite: 2026-02-03] */
@@ -87,6 +90,7 @@ st.divider()
 
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
+    # 確保曉臻只唸翻譯好的口語中文
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
