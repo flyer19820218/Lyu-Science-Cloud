@@ -103,7 +103,7 @@ async def generate_voice_base64(text):
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
 # --- 3. 側邊欄：曉臻的科學動能控制塔 ---
-st.sidebar.title("🚪 科學動能控制塔")
+st.sidebar.title("🚪打開實驗室大門-申請金鑰")
 st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南：</b><br>
