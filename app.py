@@ -24,7 +24,7 @@ st.markdown("""
         background-color: #ffffff !important;
     }
 
-    html, body, .stMarkdown, p, span, label, li {
+    html, body, .stMarkdown, p, span, label, li, h1, h2, h3 {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
@@ -33,7 +33,7 @@ st.markdown("""
     [data-testid="stSidebar"] { min-width: 300px !important; max-width: 300px !important; }
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
 
-    /* 3. 🛠️ 「打開/闔上」按鈕強力修復協議 (精準對齊版) */
+    /* 3. 🛠️ 「打開/闔上」按鈕強力修復協議 (精準對齊版) [cite: 2026-02-03] */
     button[data-testid="stSidebarCollapseButton"] {
         font-size: 0px !important;
         color: transparent !important;
@@ -45,7 +45,6 @@ st.markdown("""
         display: none !important;
     }
 
-    /* 預設狀態 (側邊欄開啟時)：顯示「闔上 ◀」 */
     button[data-testid="stSidebarCollapseButton"]::after {
         content: "闔上 ◀";
         font-size: 1.1rem !important;
@@ -55,7 +54,6 @@ st.markdown("""
         visibility: visible;
     }
 
-    /* 當側邊欄「收合」後，強制顯示為「▶ 打開」 */
     [data-testid="stHeader"] button[data-testid="stSidebarCollapseButton"]::after {
         content: "▶ 打開" !important;
         padding-left: 10px;
@@ -81,7 +79,6 @@ st.markdown("""
         border-radius: 5px;
         color: #000000;
     }
-    [data-testid="stFileUploaderSmall"] { display: none !important; }
 
     @media (prefers-color-scheme: dark) { .stApp { background-color: #ffffff !important; color: #000000 !important; } }
     .guide-box { border: 2px dashed #01579b; padding: 1rem; border-radius: 12px; background-color: #f0f8ff; color: #000000; }
@@ -89,9 +86,13 @@ st.markdown("""
     <meta name="color-scheme" content="light">
 """, unsafe_allow_html=True)
 
+# --- 🚀 標題重置：現在大標題回來了 ---
+st.title("🏃‍♀️ 臻 · 極速自然能量域")
+st.markdown("### 🔬 資深理化老師 AI 助教：曉臻老師陪你衝刺科學馬拉松")
+st.divider()
+
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
-    # 確保曉臻只唸翻譯好的口語中文 [cite: 2026-02-03]
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」]', '', text)
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
@@ -101,7 +102,7 @@ async def generate_voice_base64(text):
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
 # --- 3. 側邊欄：曉臻的科學實驗室任意門 [cite: 2026-02-03] ---
-st.sidebar.title("🏃‍♀️ 打開教室的門鎖，曉臻老師要來上自然課了")
+st.sidebar.title("🚪 曉臻的科學動能控制塔") # 這裡是控制塔入口
 st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南：</b><br>
@@ -117,7 +118,7 @@ st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", placeholder="例如：什麼是質量守恆？", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
-# --- 4. 曉臻教學 6 項核心指令 (真理對答案強化版) [cite: 2026-02-03] ---
+# --- 4. 曉臻教學指令 (真理對答案) [cite: 2026-02-03] ---
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
 
@@ -135,7 +136,7 @@ SYSTEM_PROMPT = """
 6. 【真理激勵】：結尾必喊『這就是自然科學的真理！』並鼓勵同學不要在馬拉松半路放棄。
 """
 
-# 頁碼直選置頂 [cite: 2026-02-03]
+
 target_page = st.number_input("📍 請輸入/選擇講義頁碼 (1-64)", 1, 64, 1, key="main_pg")
 
 pdf_path = os.path.join("data", "二下第一章.pdf")
@@ -153,13 +154,12 @@ if os.path.exists(pdf_path):
         if not user_key:
             st.warning("⚠️ 值日生請注意：尚未轉動啟動金鑰！")
         else:
-            with st.spinner("曉臻正在努力備課中，請稍等!你可以先喝杯珍奶..."):
+            with st.spinner("曉臻正在努力備課中..."):
                 try:
                     genai.configure(api_key=user_key)
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
-                    prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。若有練習題請先讓學生練習，然後對答案並解說。"
+                    prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。"
                     res = MODEL.generate_content([prompt, img_data])
-                    
                     st.info(f"🔊 曉臻正在進行音速破風導讀！")
                     st.markdown(asyncio.run(generate_voice_base64(res.text)), unsafe_allow_html=True)
                     st.balloons()
