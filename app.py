@@ -26,21 +26,28 @@ st.markdown("""
         max-width: 320px !important; 
     }
     
-    /* 3. 側邊欄按鈕隱藏 (維持現狀，不做更動) */
-    button[data-testid="stSidebarCollapseButton"] {
+    /* 3. 側邊欄按鈕絕對隱藏 (防止文字殘留) */
+    button[data-testid="stSidebarCollapseButton"],
+    button[data-testid="stSidebarCollapseButton"] > * {
         display: none !important;
         visibility: hidden !important;
+        height: 0px !important;
+        width: 0px !important;
+        font-size: 0px !important;
+        color: transparent !important;
+        opacity: 0 !important;
     }
-    
-    /* 4. 輸入框美化修復：移除醜陋黑框，改用淺灰底色 */
-    /* 修正點：拿掉 border: 1px solid #000000，改用背景色來凸顯 */
+
+    /* 4. 輸入框美化修復：純白圖塊 + 溫柔邊框 */
+    /* 修正點：背景改回白色，加入 1px 淺灰邊框，自然形成方框 */
     [data-baseweb="input"], [data-testid="stNumberInput"] div, [data-testid="stTextInput"] div {
-        background-color: #f0f2f6 !important; /* 淺灰底色，讓學生一眼看到這裡可以輸入 */
-        border: none !important;             /* 確保沒有醜醜的黑線 */
-        border-radius: 8px !important;       /* 圓角比較親切 */
+        background-color: #ffffff !important;  /* 白色圖塊 */
+        border: 1px solid #d1d5db !important;  /* 淺灰色邊框 (取代醜黑線) */
+        border-radius: 6px !important;         /* 微微圓角 */
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; /* 增加一點點立體感 */
     }
     
-    /* 確保輸入文字是黑色的 */
+    /* 確保輸入文字是深黑色的 */
     [data-baseweb="input"] input {
         color: #000000 !important;
     }
