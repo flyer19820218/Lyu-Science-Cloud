@@ -41,7 +41,7 @@ async def generate_voice_base64(text):
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
 # --- 3. 側邊欄：曉臻的科學實驗室任意門 [cite: 2026-02-03] ---
-st.sidebar.title("🏃‍♀️ 曉臻的科學實驗室任意門")
+st.sidebar.title("🏃‍♀️ 打開教室的門鎖，曉臻老師要來上自然課了")
 st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南：</b><br>
@@ -65,11 +65,13 @@ SYSTEM_PROMPT = """
 2. 【練習題偵測】：偵測「練習」字樣或空白填空。先公佈正確答案，再啟動「分段配速解說」，像拆解馬拉松戰術一樣詳細。
 3. 【上下文串連】：通讀全圖，將教學概念與練習題連結，優先使用「珍珠奶茶」邏輯解釋。嚴禁描述顏色字體。
 4. 【導航】：腳本開頭必說：『各位同學，請翻到第 X 頁。』
-5. 【公式轉譯規範】：
-   - LaTeX 公式必須轉為台灣口語中文。
-   - 分式 (a/b)：寫作「b 分之 a」或「a 除以 b」。
-   - 次方 (x^2)：寫作「x 的平方」或「x 的二次方」。
-   - 化學式：英文與數字拆解，數字帶長音。如 O2 寫作「O two～～」、H2O 寫作「H two～～ O」。
+5. 【轉譯規範：極致清晰版】：
+   - LaTeX 公式轉口語時，嚴禁讓 AI 直接輸出符號（如 H2O2）。
+   - 必須將所有英文單字與數字「完全拆開」，且每個字後方都加上「～～」拉長音標記與空格。
+   - 例如：O2 寫作「O～～ two～～」。
+   - 例如：H2O2 寫作「H～～ two～～ O～～ two～～」。
+   - 例如：CO2 寫作「C～～ O～～ two～～」。
+   - 這樣做能確保聲紋穩定，且讓曉臻唸得清楚有韻律感。 [cite: 2026-02-03]
 6. 【真理激勵】：結尾必喊『這就是自然科學的真理！』並鼓勵同學不要在馬拉松半路放棄。
 """
 # 頁碼直選置頂 [cite: 2026-02-03]
@@ -91,7 +93,7 @@ if os.path.exists(pdf_path):
         if not user_key:
             st.warning("⚠️ 值日生請注意：尚未轉動啟動金鑰！")
         else:
-            with st.spinner("曉臻正在分析賽事戰報與對答案邏輯..."):
+            with st.spinner("曉臻正在努力備課中，請稍等!你可以先喝杯珍奶..."):
                 try:
                     genai.configure(api_key=user_key)
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash')
