@@ -134,9 +134,7 @@ st.sidebar.title("🚪 打開實驗室大門-金鑰")
 st.sidebar.markdown("""
 <div class="info-box">
     <b>📢 曉臻老師的叮嚀：</b><br>
-    曉臻是 AI，不一定完全對，但別小看她。<br>
-    一般的考試可是輕輕鬆鬆考滿分！<br>
-    有發現什麼 Bug，請來信：<br>
+    曉臻是AI，不一定完全對，但別小看她。一般的考試可是輕輕鬆鬆考滿分！有發現什麼 Bug，請來信：<br>
     <a href="mailto:flyer19820218@gmail.com" style="color: #01579b; text-decoration: none; font-weight: bold;">flyer19820218@gmail.com</a>
 </div>
 <br>
