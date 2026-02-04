@@ -38,35 +38,33 @@ st.markdown("""
         opacity: 0 !important;
     }
 
-    /* 4. 輸入元件美化修復：純白圖塊 + 溫柔邊框 [cite: 2026-02-03] */
-    /* 涵蓋 Input, NumberInput, Selectbox */
+    /* 4. 輸入元件美化：純白圖塊 + 淺灰邊框 [cite: 2026-02-03] */
     [data-baseweb="input"], [data-baseweb="select"], [data-testid="stNumberInput"] div, [data-testid="stTextInput"] div, [data-testid="stSelectbox"] > div > div {
-        background-color: #ffffff !important;  /* 白色圖塊 */
-        border: 1px solid #d1d5db !important;  /* 淺灰色邊框 */
-        border-radius: 6px !important;         /* 微微圓角 */
+        background-color: #ffffff !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 6px !important;
         box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
     }
     
-    /* 修正下拉選單內部的顏色 */
-    [data-baseweb="select"] > div {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-    }
-    
-    /* 確保輸入文字是深黑色的 */
-    [data-baseweb="input"] input, [data-baseweb="select"] div {
-        color: #000000 !important;
-    }
+    [data-baseweb="select"] > div { background-color: #ffffff !important; color: #000000 !important; }
+    [data-baseweb="input"] input, [data-baseweb="select"] div { color: #000000 !important; }
 
     /* 5. 字體規範：全黑翩翩體 */
-    html, body, .stMarkdown, p, span, label, li, h1, h2, h3 {
+    html, body, .stMarkdown, p, span, label, li, h1, h2, h3, .stButton button {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
 
+    /* 調整按鈕樣式讓它更明顯 */
+    .stButton button {
+        border: 2px solid #000000 !important;
+        background-color: #ffffff !important;
+        font-weight: bold !important;
+    }
+
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
 
-    /* 6. 📸 檔案上傳區中文化 */
+    /* 6. 檔案上傳區中文化 */
     section[data-testid="stFileUploadDropzone"] span { visibility: hidden; }
     section[data-testid="stFileUploadDropzone"]::before {
         content: "📸 拖曳圖片至此或點擊下方按鈕 ➔";
@@ -99,6 +97,7 @@ st.divider()
 
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
+    # 確保曉臻只唸翻譯好的口語中文
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
@@ -124,74 +123,140 @@ st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", placeholder="例如：什麼是質量守恆？", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
-# --- 4. 曉臻教學 6 項核心指令 (真理對答案完整回歸版) [cite: 2026-02-03] ---
+# --- 4. 曉臻教學 6 項核心指令 (5頁連擊強化版) [cite: 2026-02-03] ---
+# 增加了換頁引導的指令
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
 
 1. 【熱血開場】：隨機 30 秒聊「運動對大腦的科學好處」或馬拉松訓練心得。嚴禁編造比分，必含『熱身一下下課老師就要去跑步了』。
-2. 【練習題偵測】：偵測「練習」字樣或空白填空。先公佈正確答案，再啟動「分段配速解說」，像拆解馬拉松戰術一樣詳細。
-3. 【上下文串連】：通讀全圖，將教學概念與練習題連結，優先使用「珍珠奶茶」邏輯解釋（n=m/M）。嚴禁描述顏色字體。
-4. 【導航】：腳本開頭必說：『各位同學，請翻到第 X 頁。』
+2. 【練習題偵測】：偵測圖片中的「練習」字樣或空白填空。先公佈正確答案，再啟動「分段配速解說」，像拆解馬拉松戰術一樣詳細。
+3. 【上下文串連】：通讀**多張圖片**，將教學概念與練習題連結，優先使用「珍珠奶茶」邏輯解釋（n=m/M）。
+4. 【翻頁導航】：這是一次講解 5 頁的連續課程。
+   - 在講解完一頁後，必須明確說出：『好，各位同學，我們翻到第 X 頁。』
+   - 確保學生跟上進度，每頁之間的過場要流暢。
 5. 【轉譯規範：極致清晰版】：
    - LaTeX 公式轉口語時，嚴禁讓 AI 直接輸出符號（如 H2O2）。
    - 必須將所有英文單字與數字「完全拆開」，且每個字後方都加上「～～」拉長音標記與空格。
    - 例如：O2 寫作「O～～ two～～」。
    - 例如：H2O2 寫作「H～～ two～～ O～～ two～～」。
    - 例如：n = m/M 寫作「n～～ 等於～～ m～～ 除以～～ M～～」。
-   - 這樣做能確保聲紋穩定，且讓曉臻唸得清楚有韻律感。 [cite: 2026-02-03]
-6. 【真理激勵】：結尾必喊『這就是自然科學的真理！』並鼓勵同學不要在馬拉松半路放棄。
+6. 【真理激勵】：在 5 頁全部講完的最後，必喊『這就是自然科學的真理！』並鼓勵同學不要在馬拉松半路放棄。
 """
 
-# --- 5. 新增：三欄式系統導航 (冊別 | 章節 | 頁碼) ---
+# --- 5. 導航系統 (冊別 | 章節 | 起始頁碼) ---
 col1, col2, col3 = st.columns([1, 1, 1])
-
 with col1:
-    # 這裡的選項可以根據你的檔案庫擴充
     vol_select = st.selectbox("📚 冊別選擇", ["第一冊", "第二冊", "第三冊", "二下(第四冊)", "第五冊", "第六冊"], index=3)
-
 with col2:
     chap_select = st.selectbox("🧪 章節選擇", ["第一章", "第二章", "第三章", "第四章", "第五章", "第六章"], index=0)
-
 with col3:
-    target_page = st.number_input("📄 講義頁碼", 1, 100, 1, key="main_pg")
+    # 這裡改成「起始頁碼」，邏輯變更為「從這頁開始讀5頁」
+    start_page = st.number_input("🏁 起始頁碼 (一次衝刺5頁)", 1, 100, 1, key="start_pg")
 
-# 檔名組合邏輯 (暫時映射回你原本的檔案，方便測試)
-# 實際上你未來的檔案結構可能是 data/第四冊/第一章.pdf
+# 檔名組合 (範例)
 if vol_select == "二下(第四冊)" and chap_select == "第一章":
     filename = "二下第一章.pdf"
 else:
-    # 這裡只是一個範例，未來你可以改成 f"{vol_select}_{chap_select}.pdf"
     filename = f"{vol_select}_{chap_select}.pdf"
 
 pdf_path = os.path.join("data", filename)
 
-if os.path.exists(pdf_path):
-    doc = fitz.open(pdf_path)
-    # 防止頁碼超出範圍
-    if target_page - 1 < len(doc):
-        page = doc.load_page(target_page - 1)
-        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
-        img_data = Image.open(io.BytesIO(pix.tobytes()))
-        
-        st.image(img_data, use_container_width=True) 
-        st.divider()
-        
-        if st.button("🏃‍♀️ 曉臻：心率同步，進入備課衝刺！"):
-            if not user_key:
-                st.warning("⚠️ 值日生請注意：尚未轉動啟動金鑰！")
-            else:
-                with st.spinner("曉臻正在努力備課中，請稍等!你可以先喝杯珍奶..."):
-                    try:
-                        genai.configure(api_key=user_key)
-                        MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
-                        prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。若有練習題請先讓學生練習，然後對答案並解說。"
-                        res = MODEL.generate_content([prompt, img_data])
-                        
-                        st.info(f"🔊 曉臻正在進行音速破風導讀！")
-                        st.markdown(asyncio.run(generate_voice_base64(res.text)), unsafe_allow_html=True)
-                        st.balloons()
-                    except Exception as e: st.error(f"❌ 控制塔連線失敗：{e}")
+# 初始化 Session State 來存儲課程狀態
+if "class_started" not in st.session_state:
+    st.session_state.class_started = False
+if "audio_html" not in st.session_state:
+    st.session_state.audio_html = None
+if "display_images" not in st.session_state:
+    st.session_state.display_images = []
+
+# --- 主畫面邏輯 ---
+
+if not st.session_state.class_started:
+    # 狀態 A: 備課中 (顯示封面圖，不讀 PDF，不燒 Token)
+    cover_path = os.path.join("data", "cover.jpg") # 假設有一張封面圖
+    
+    # 顯示封面 (如果沒有圖就顯示預設文字)
+    if os.path.exists(cover_path):
+        st.image(cover_path, caption="曉臻老師正在操場熱身準備中...", use_container_width=True)
     else:
-        st.warning(f"⚠️ 這一章只有 {len(doc)} 頁喔！跑過頭了！")
+        # 如果使用者還沒放封面圖，顯示一個漂亮的 placeholder
+        st.info("🏃‍♀️ 曉臻老師正在起跑線上熱身... (請在 data 資料夾放入 cover.jpg 以顯示封面)")
+    
+    st.divider()
+    
+    # 大大的備課按鈕
+    if st.button(f"🏃‍♀️ 開始 25 分鐘馬拉松課程 (第 {start_page} ~ {start_page+4} 頁)", type="primary", use_container_width=True):
+        if not user_key:
+            st.warning("⚠️ 值日生請注意：尚未轉動啟動金鑰！")
+        elif not os.path.exists(pdf_path):
+            st.error(f"❌ 找不到課本：{filename}")
+        else:
+            # --- 啟動備課流程 (這時候才讀 PDF & Call API) ---
+            with st.spinner("曉臻正在極速翻閱 5 頁講義，腦袋高速運轉中... (請稍候，這是一場長跑)"):
+                try:
+                    doc = fitz.open(pdf_path)
+                    images_to_process = []
+                    display_images_list = []
+                    
+                    # 讀取連續 5 頁 (如果後面沒頁數了就讀到最後一頁)
+                    pages_to_read = range(start_page - 1, min(start_page + 4, len(doc)))
+                    
+                    if len(pages_to_read) == 0:
+                        st.error("⚠️ 這本講義已經翻到最後一頁了！")
+                        st.stop()
+
+                    for page_num in pages_to_read:
+                        page = doc.load_page(page_num)
+                        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                        img = Image.open(io.BytesIO(pix.tobytes()))
+                        images_to_process.append(img)
+                        display_images_list.append((page_num + 1, img)) # 存起來等等顯示
+                    
+                    # Call Gemini
+                    genai.configure(api_key=user_key)
+                    MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
+                    
+                    # 提示詞加入圖片數量資訊
+                    prompt = f"{SYSTEM_PROMPT}\n現在請你一次導讀從第 {start_page} 頁到第 {pages_to_read[-1]+1} 頁的內容。請務必在換頁時提醒學生『請翻到第 X 頁』。"
+                    
+                    # 將 Prompt 和 5 張圖片一起丟進去
+                    content_payload = [prompt] + images_to_process
+                    res = MODEL.generate_content(content_payload)
+                    
+                    # 生成語音
+                    audio_html = asyncio.run(generate_voice_base64(res.text))
+                    
+                    # 存入 Session State 並切換狀態
+                    st.session_state.audio_html = audio_html
+                    st.session_state.display_images = display_images_list
+                    st.session_state.class_started = True
+                    st.rerun() # 重新整理頁面以進入上課模式
+
+                except Exception as e:
+                    st.error(f"❌ 備課途中跌倒了：{e}")
+
 else:
-    st.error(f"❌ 目前資料庫還沒有：{filename}，請先上傳 PDF 到 data 資料夾。")
+    # 狀態 B: 上課中 (顯示播放器與講義內容)
+    
+    st.success("🔔 噹噹噹！上課鐘響了，請專注 25 分鐘！")
+    
+    # 1. 播放器置頂
+    if st.session_state.audio_html:
+        st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
+    
+    st.divider()
+    
+    # 2. 顯示剛剛讀取的 5 頁講義 (讓學生自己可以對照看，或是用手邊的書)
+    with st.expander("📖 點擊查看本次課程的 5 頁講義 (數位黑板)", expanded=True):
+        for p_num, img in st.session_state.display_images:
+            st.caption(f"--- 第 {p_num} 頁 ---")
+            st.image(img, use_container_width=True)
+            st.divider()
+            
+    # 3. 下課按鈕
+    if st.button("🏁 下課休息 (回到首頁)"):
+        # 清除狀態，回到首頁
+        st.session_state.class_started = False
+        st.session_state.audio_html = None
+        st.session_state.display_images = []
+        st.rerun()
