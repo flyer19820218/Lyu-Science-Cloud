@@ -26,7 +26,7 @@ st.markdown("""
         padding-top: 1rem !important;
         padding-bottom: 2rem !important;
     }
-    /* 側邊欄向上拉 - 這是新的修正 */
+    /* 側邊欄向上拉 */
     section[data-testid="stSidebar"] > div {
         padding-top: 1rem !important;
     }
@@ -71,8 +71,9 @@ st.markdown("""
     [data-baseweb="select"] > div { background-color: #ffffff !important; color: #000000 !important; }
     [data-baseweb="input"] input, [data-baseweb="select"] div { color: #000000 !important; }
 
-    /* 6. 字體規範：全黑翩翩體 */
-    html, body, .stMarkdown, p, span, label, li, h1, h2, h3, .stButton button, a {
+    /* 6. 字體規範：全黑翩翩體 (關鍵修正：移除 span) [cite: 2026-02-03] */
+    /* 修正說明：移除了 'span'，因為圖示(Icon)通常是 span，強制改字體會讓圖示變成文字亂碼 */
+    html, body, .stMarkdown, p, label, li, h1, h2, h3, .stButton button, a {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
@@ -130,11 +131,13 @@ async def generate_voice_base64(text):
 # --- 3. 側邊欄：更新標題為「打開實驗室大門-金鑰」 ---
 st.sidebar.title("🚪 打開實驗室大門-金鑰")
 
-# 使用說明區塊 (移到最上方或金鑰上方，依據你的需求，這裡放在金鑰上方)
+# 使用說明區塊
 st.sidebar.markdown("""
 <div class="info-box">
     <b>📢 曉臻老師的叮嚀：</b><br>
-    曉臻是AI，不一定完全對，但別小看她。一般的考試可是輕輕鬆鬆考滿分！有發現什麼 Bug，請來信：<br>
+    曉臻是 AI，不一定完全對，但別小看她。<br>
+    一般的考試可是輕輕鬆鬆考滿分！<br>
+    有發現什麼 Bug，請來信：<br>
     <a href="mailto:flyer19820218@gmail.com" style="color: #01579b; text-decoration: none; font-weight: bold;">flyer19820218@gmail.com</a>
 </div>
 <br>
@@ -204,7 +207,7 @@ if "display_images" not in st.session_state:
 if not st.session_state.class_started:
     # 狀態 A: 備課中 (顯示封面圖)
     
-    # --- 修正後的圖片讀取邏輯 (防爆版) ---
+    # --- 圖片讀取邏輯 (防爆版) ---
     cover_image_path = None
     possible_extensions = [".jpg", ".jpeg", ".png", ".JPG", ".PNG"]
     
