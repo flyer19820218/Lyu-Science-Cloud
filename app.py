@@ -124,7 +124,7 @@ st.sidebar.title("🚪 打開實驗室大門-金鑰")
 st.sidebar.markdown("""
 <div class="info-box">
     <b>📢 曉臻老師的叮嚀：</b><br>
-    曉臻是 AI，不一定完全對，但別小看她。一般的考試可是輕輕鬆鬆考滿分！有發現什麼 Bug，請來信：<br>
+    曉臻是 AI，不一定完全對，但別小看她。一般的考試可是輕輕鬆鬆考滿分！曉臻怕大家會不專心，一次只會上5頁的講義。想要繼續上課，選好頁碼，再按一次就可以了。有發現什麼 Bug，請來信：<br>
     <a href="mailto:flyer19820218@gmail.com" style="color: #01579b; text-decoration: none; font-weight: bold;">flyer19820218@gmail.com</a>
 </div>
 <br>
@@ -135,7 +135,7 @@ st.sidebar.markdown("""
     <b>📖 值日生啟動指南：</b><br>
     1. 前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#01579b; font-weight:bold;">Google AI Studio</a>。<br>
     2. 點擊 <b>Create API key</b> 並勾選同意。<br>
-    3. 貼回下方金鑰區打開實驗室大門！
+    3. 貼回下方金鑰區打開實驗室
 </div>
 """, unsafe_allow_html=True)
 user_key = st.sidebar.text_input("🔑 實驗室啟動金鑰", type="password", key="tower_key")
