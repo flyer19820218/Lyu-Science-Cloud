@@ -3,60 +3,64 @@ import google.generativeai as genai
 import os, asyncio, edge_tts, re, base64, io, random
 from PIL import Image
 
-# --- 零件檢查 ---
+# --- 零件檢查 [cite: 2026-02-03] ---
 try:
     import fitz # pymupdf
 except ImportError:
     st.error("❌ 零件缺失！請確保已安裝 pymupdf 與 edge-tts。")
     st.stop()
 
-# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄恆定展開) ---
+# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄恆定展開) [cite: 2026-02-03] ---
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
     <style>
-    /* 1. 全局視覺鎖定 (白底黑字翩翩體) */
+    /* 1. 全局視覺鎖定 (白底黑字翩翩體) [cite: 2026-02-03] */
     .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { 
         background-color: #ffffff !important; 
     }
     
-    /* 2. 空間壓縮術：消除上方大片留白 */
-    /* 這是控制主要內容區域的關鍵，原本預設是 6rem (約 100px)，我們改成 1rem (約 16px) */
+    /* 2. 空間壓縮術 (主畫面 + 側邊欄) [cite: 2026-02-03] */
+    /* 主畫面向上拉 */
     div.block-container {
         padding-top: 1rem !important;
         padding-bottom: 2rem !important;
     }
+    /* 側邊欄向上拉 - 這是新的修正 */
+    section[data-testid="stSidebar"] > div {
+        padding-top: 1rem !important;
+    }
 
-    /* 3. 側邊欄固定協議：鎖定寬度 320px */
+    /* 3. 側邊欄固定協議：鎖定寬度 320px [cite: 2026-02-03] */
     [data-testid="stSidebar"] { 
         min-width: 320px !important; 
         max-width: 320px !important; 
     }
     
-    /* 4. 核災級隱藏修復：針對 keyboard_double_arrow_right 文字殘留 */
+    /* 4. 核災級隱藏修復：針對 keyboard_double_arrow_right 文字殘留 [cite: 2026-02-03] */
     button[data-testid="stSidebarCollapseButton"],
     button[data-testid="stSidebarCollapseButton"] > *,
     [data-testid="stSidebarCollapsedControl"] {
-        display: none !important;        /* 1. 結構上移除 */
-        visibility: hidden !important;   /* 2. 視覺上隱藏 */
-        height: 0px !important;          /* 3. 高度壓扁 */
-        width: 0px !important;           /* 4. 寬度壓扁 */
-        font-size: 0px !important;       /* 5. 字體歸零 (關鍵！讓文字變成 0 大小) */
-        color: transparent !important;   /* 6. 顏色透明 */
-        opacity: 0 !important;           /* 7. 透明度歸零 */
-        z-index: -100 !important;        /* 8. 丟到最底層 */
-        margin: 0 !important;            /* 9. 移除邊距 */
-        padding: 0 !important;           /* 10. 移除填充 */
+        display: none !important;
+        visibility: hidden !important;
+        height: 0px !important;
+        width: 0px !important;
+        font-size: 0px !important;
+        color: transparent !important;
+        opacity: 0 !important;
+        z-index: -100 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
-    /* 隱藏原本的 Header 裝飾條，避免它擋到我們往上拉的標題 */
+    /* 隱藏 Header 避免擋住 */
     header[data-testid="stHeader"] {
         background-color: transparent !important;
-        height: 0px !important; /* 讓 Header 高度歸零 */
+        height: 0px !important;
         z-index: -1 !important;
     }
 
-    /* 5. 輸入元件美化：純白圖塊 + 淺灰邊框 */
+    /* 5. 輸入元件美化：純白圖塊 + 淺灰邊框 [cite: 2026-02-03] */
     [data-baseweb="input"], [data-baseweb="select"], [data-testid="stNumberInput"] div, [data-testid="stTextInput"] div, [data-testid="stSelectbox"] > div > div {
         background-color: #ffffff !important;
         border: 1px solid #d1d5db !important;
@@ -68,7 +72,7 @@ st.markdown("""
     [data-baseweb="input"] input, [data-baseweb="select"] div { color: #000000 !important; }
 
     /* 6. 字體規範：全黑翩翩體 */
-    html, body, .stMarkdown, p, span, label, li, h1, h2, h3, .stButton button {
+    html, body, .stMarkdown, p, span, label, li, h1, h2, h3, .stButton button, a {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
@@ -103,6 +107,7 @@ st.markdown("""
 
     @media (prefers-color-scheme: dark) { .stApp { background-color: #ffffff !important; color: #000000 !important; } }
     .guide-box { border: 2px dashed #01579b; padding: 1rem; border-radius: 12px; background-color: #f0f8ff; color: #000000; }
+    .info-box { border: 1px solid #ddd; padding: 1rem; border-radius: 8px; background-color: #f9f9f9; font-size: 0.9rem; }
     </style>
     <meta name="color-scheme" content="light">
 """, unsafe_allow_html=True)
@@ -112,7 +117,7 @@ st.title("🏃‍♀️ 臻 · 極速自然能量域")
 st.markdown("### 🔬 資深理化老師 AI 助教：曉臻老師陪你衝刺科學馬拉松")
 st.divider()
 
-# --- 2. 曉臻語音引擎 (口語轉譯版) ---
+# --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
@@ -124,6 +129,19 @@ async def generate_voice_base64(text):
 
 # --- 3. 側邊欄：更新標題為「打開實驗室大門-金鑰」 ---
 st.sidebar.title("🚪 打開實驗室大門-金鑰")
+
+# 使用說明區塊 (移到最上方或金鑰上方，依據你的需求，這裡放在金鑰上方)
+st.sidebar.markdown("""
+<div class="info-box">
+    <b>📢 曉臻老師的叮嚀：</b><br>
+    曉臻是 AI，不一定完全對，但別小看她。<br>
+    一般的考試可是輕輕鬆鬆考滿分！<br>
+    有發現什麼 Bug，請來信：<br>
+    <a href="mailto:flyer19820218@gmail.com" style="color: #01579b; text-decoration: none; font-weight: bold;">flyer19820218@gmail.com</a>
+</div>
+<br>
+""", unsafe_allow_html=True)
+
 st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南：</b><br>
@@ -139,7 +157,7 @@ st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", placeholder="例如：什麼是質量守恆？", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
-# --- 4. 曉臻教學 6 項核心指令 (5頁連擊強化版) ---
+# --- 4. 曉臻教學 6 項核心指令 (5頁連擊強化版) [cite: 2026-02-03] ---
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
 
@@ -187,6 +205,8 @@ if "display_images" not in st.session_state:
 
 if not st.session_state.class_started:
     # 狀態 A: 備課中 (顯示封面圖)
+    
+    # --- 修正後的圖片讀取邏輯 (防爆版) ---
     cover_image_path = None
     possible_extensions = [".jpg", ".jpeg", ".png", ".JPG", ".PNG"]
     
@@ -197,10 +217,84 @@ if not st.session_state.class_started:
             break
             
     if cover_image_path:
-        st.image(cover_image_path, caption="曉臻老師正在操場熱身準備中...", use_container_width=True)
+        try:
+            # 先用 PIL 打開確認圖片沒壞，再轉給 Streamlit
+            image = Image.open(cover_image_path)
+            st.image(image, caption="曉臻老師正在操場熱身準備中...", use_container_width=True)
+        except Exception as e:
+            # 如果圖片壞了，顯示替代文字，不要當機
+            st.warning(f"⚠️ 封面圖片讀取失敗 (可能格式損壞)，但不影響上課喔！({e})")
     else:
         st.info("🏃‍♀️ 曉臻老師正在起跑線上熱身... (請在 data 資料夾放入 cover.jpg 或 cover.png 以顯示封面)")
     
     st.divider()
     
-    # 備課按
+    # 備課按鈕
+    if st.button(f"🏃‍♀️ 開始 25 分鐘馬拉松課程 (第 {start_page} ~ {start_page+4} 頁)", type="primary", use_container_width=True):
+        if not user_key:
+            st.warning("⚠️ 值日生請注意：尚未轉動實驗室大門的金鑰！")
+        elif not os.path.exists(pdf_path):
+            st.error(f"❌ 找不到課本：{filename}")
+        else:
+            # --- 啟動備課流程 ---
+            with st.spinner("曉臻正在極速翻閱 5 頁講義，腦袋高速運轉中... (請稍候，這是一場長跑)"):
+                try:
+                    doc = fitz.open(pdf_path)
+                    images_to_process = []
+                    display_images_list = []
+                    
+                    # 讀取連續 5 頁
+                    pages_to_read = range(start_page - 1, min(start_page + 4, len(doc)))
+                    
+                    if len(pages_to_read) == 0:
+                        st.error("⚠️ 這本講義已經翻到最後一頁了！")
+                        st.stop()
+
+                    for page_num in pages_to_read:
+                        page = doc.load_page(page_num)
+                        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                        img = Image.open(io.BytesIO(pix.tobytes()))
+                        images_to_process.append(img)
+                        display_images_list.append((page_num + 1, img))
+                    
+                    # Call Gemini
+                    genai.configure(api_key=user_key)
+                    MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
+                    
+                    prompt = f"{SYSTEM_PROMPT}\n現在請你一次導讀從第 {start_page} 頁到第 {pages_to_read[-1]+1} 頁的內容。請務必在換頁時提醒學生『請翻到第 X 頁』。"
+                    
+                    content_payload = [prompt] + images_to_process
+                    res = MODEL.generate_content(content_payload)
+                    
+                    # 生成語音
+                    audio_html = asyncio.run(generate_voice_base64(res.text))
+                    
+                    # 存入 Session State 並切換
+                    st.session_state.audio_html = audio_html
+                    st.session_state.display_images = display_images_list
+                    st.session_state.class_started = True
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"❌ 備課途中跌倒了：{e}")
+
+else:
+    # 狀態 B: 上課中
+    st.success("🔔 噹噹噹！上課鐘響了，請專注 25 分鐘！")
+    
+    if st.session_state.audio_html:
+        st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
+    
+    st.divider()
+    
+    with st.expander("📖 點擊查看本次課程的 5 頁講義 (數位黑板)", expanded=True):
+        for p_num, img in st.session_state.display_images:
+            st.caption(f"--- 第 {p_num} 頁 ---")
+            st.image(img, use_container_width=True)
+            st.divider()
+            
+    if st.button("🏁 下課休息 (回到首頁)"):
+        st.session_state.class_started = False
+        st.session_state.audio_html = None
+        st.session_state.display_images = []
+        st.rerun()
