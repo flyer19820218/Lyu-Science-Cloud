@@ -3,50 +3,46 @@ import google.generativeai as genai
 import os, asyncio, edge_tts, re, base64, io, random
 from PIL import Image
 
-# --- 零件檢查 [cite: 2026-02-03] ---
+# --- 零件檢查 ---
 try:
     import fitz # pymupdf
 except ImportError:
     st.error("❌ 零件缺失！請確保已安裝 pymupdf 與 edge-tts。")
     st.stop()
 
-# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄恆定展開) [cite: 2026-02-03] ---
+# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄恆定展開) ---
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
     <style>
-    /* 1. 全局視覺鎖定 (白底黑字翩翩體) [cite: 2026-02-03] */
+    /* 1. 全局視覺鎖定 (白底黑字翩翩體) */
     .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { 
         background-color: #ffffff !important; 
     }
     
-    /* 2. 側邊欄固定協議：鎖定寬度 320px [cite: 2026-02-03] */
+    /* 2. 側邊欄固定協議：鎖定寬度 320px */
     [data-testid="stSidebar"] { 
         min-width: 320px !important; 
         max-width: 320px !important; 
     }
     
-    /* 3. ☢️ 核災級隱藏修復：針對頑固的 keyboard_double_arrow_right 文字 [cite: 2026-02-03] */
-    /* 針對按鈕本身以及它裡面所有的子元素 (svg, span, div) */
-    button[data-testid="stSidebarCollapseButton"],
-    button[data-testid="stSidebarCollapseButton"] > *, 
-    button[data-testid="stSidebarCollapseButton"] span,
-    [data-testid="stSidebarNav"] button {
-        display: none !important;        /* 1. 結構上移除 */
-        visibility: hidden !important;   /* 2. 視覺上隱藏 */
-        height: 0px !important;          /* 3. 高度壓扁 */
-        width: 0px !important;           /* 4. 寬度壓扁 */
-        font-size: 0px !important;       /* 5. 字體歸零 (這招專門對付文字殘留) */
-        color: transparent !important;   /* 6. 顏色透明 (這招是對付顯示出來的黑字) */
-        overflow: hidden !important;     /* 7. 超出範圍切除 */
-        opacity: 0 !important;           /* 8. 透明度歸零 */
+    /* 3. 側邊欄按鈕隱藏 (維持現狀，不做更動) */
+    button[data-testid="stSidebarCollapseButton"] {
+        display: none !important;
+        visibility: hidden !important;
     }
-
-    /* 4. 輸入框外框校準：強制顯示黑色外框 [cite: 2026-02-03] */
-    [data-baseweb="input"] {
-        border: 1px solid #000000 !important;
-        background-color: #ffffff !important;
-        border-radius: 5px !important;
+    
+    /* 4. 輸入框美化修復：移除醜陋黑框，改用淺灰底色 */
+    /* 修正點：拿掉 border: 1px solid #000000，改用背景色來凸顯 */
+    [data-baseweb="input"], [data-testid="stNumberInput"] div, [data-testid="stTextInput"] div {
+        background-color: #f0f2f6 !important; /* 淺灰底色，讓學生一眼看到這裡可以輸入 */
+        border: none !important;             /* 確保沒有醜醜的黑線 */
+        border-radius: 8px !important;       /* 圓角比較親切 */
+    }
+    
+    /* 確保輸入文字是黑色的 */
+    [data-baseweb="input"] input {
+        color: #000000 !important;
     }
 
     /* 5. 字體規範：全黑翩翩體 */
@@ -88,7 +84,7 @@ st.title("🏃‍♀️ 臻 · 極速自然能量域")
 st.markdown("### 🔬 資深理化老師 AI 助教：曉臻老師陪你衝刺科學馬拉松")
 st.divider()
 
-# --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
+# --- 2. 曉臻語音引擎 (口語轉譯版) ---
 async def generate_voice_base64(text):
     # 確保曉臻只唸翻譯好的口語中文
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
@@ -99,7 +95,7 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
-# --- 3. 側邊欄：曉臻的科學動能控制塔 [cite: 2026-02-03] ---
+# --- 3. 側邊欄：曉臻的科學動能控制塔 ---
 st.sidebar.title("🚪 科學動能控制塔")
 st.sidebar.markdown("""
 <div class="guide-box">
@@ -116,7 +112,7 @@ st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", placeholder="例如：什麼是質量守恆？", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
-# --- 4. 曉臻教學 6 項核心指令 (真理對答案完整回歸版) [cite: 2026-02-03] ---
+# --- 4. 曉臻教學 6 項核心指令 (真理對答案完整回歸版) ---
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
 
@@ -130,7 +126,7 @@ SYSTEM_PROMPT = """
    - 例如：O2 寫作「O～～ two～～」。
    - 例如：H2O2 寫作「H～～ two～～ O～～ two～～」。
    - 例如：n = m/M 寫作「n～～ 等於～～ m～～ 除以～～ M～～」。
-   - 這樣做能確保聲紋穩定，且讓曉臻唸得清楚有韻律感。 [cite: 2026-02-03]
+   - 這樣做能確保聲紋穩定，且讓曉臻唸得清楚有韻律感。
 6. 【真理激勵】：結尾必喊『這就是自然科學的真理！』並鼓勵同學不要在馬拉松半路放棄。
 """
 
