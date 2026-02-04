@@ -27,30 +27,29 @@ st.markdown("""
     [data-testid="stSidebar"] { min-width: 300px !important; max-width: 300px !important; }
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
     
-    /* 3. 🛠️ 側邊欄收合按鈕「強力除錯」版 */
-    /* 強制隱藏所有按鈕內的圖示與文字標記 */
+    /* 3. 🛠️ 側邊欄收合按鈕「強力除錯」終極版 */
     button[data-testid="stSidebarCollapseButton"] {
+        font-size: 0 !important; /* 核心：徹底殺掉 keyboard_double_ 文字 */
         color: transparent !important;
-        overflow: hidden !important;
-        width: 120px !important; /* 給予固定寬度確保中文顯示完整 */
+        background-color: transparent !important;
+        min-width: 130px !important; /* 給予足夠寬度顯示中文 */
+        text-align: left !important;
     }
-    button[data-testid="stSidebarCollapseButton"] svg, 
-    button[data-testid="stSidebarCollapseButton"] span {
-        display: none !important;
+    button[data-testid="stSidebarCollapseButton"] svg {
+        display: none !important; /* 隱藏原本壞掉的圖示 */
     }
-    /* 注入自定義中文內容 */
+    /* 注入自定義中文內容，並將字體大小調回來 */
     button[data-testid="stSidebarCollapseButton"]::after {
         content: "◀ 收合控制塔"; 
         visibility: visible;
-        display: block;
-        position: absolute;
-        left: 10px;
-        color: #000000 !important;
+        display: inline-block;
+        font-size: 1rem !important; 
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
+        color: #000000 !important;
         font-weight: bold;
-        font-size: 0.9rem;
+        padding-left: 5px;
     }
-    /* 當側邊欄處於收合狀態時的文字切換 */
+    /* 當側邊欄收起時切換文字 */
     [data-testid="stSidebar"][aria-expanded="false"] + section button[data-testid="stSidebarCollapseButton"]::after {
         content: "▶ 展開控制塔";
     }
