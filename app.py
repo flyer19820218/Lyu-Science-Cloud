@@ -27,23 +27,35 @@ st.markdown("""
     [data-testid="stSidebar"] { min-width: 300px !important; max-width: 300px !important; }
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
     
-    /* 3. 🛠️ 側邊欄收合按鈕優化 (解決 keyboard_double 英文醜的問題) */
-    button[data-testid="stSidebarCollapseButton"] svg {
-        display: none !important; /* 隱藏原本醜醜的箭頭 */
+    /* 3. 🛠️ 側邊欄收合按鈕「強力除錯」版 */
+    /* 強制隱藏所有按鈕內的圖示與文字標記 */
+    button[data-testid="stSidebarCollapseButton"] {
+        color: transparent !important;
+        overflow: hidden !important;
+        width: 120px !important; /* 給予固定寬度確保中文顯示完整 */
     }
+    button[data-testid="stSidebarCollapseButton"] svg, 
+    button[data-testid="stSidebarCollapseButton"] span {
+        display: none !important;
+    }
+    /* 注入自定義中文內容 */
     button[data-testid="stSidebarCollapseButton"]::after {
-        content: "◀ 收合控制塔"; /* 改為中文與箭頭 */
+        content: "◀ 收合控制塔"; 
+        visibility: visible;
+        display: block;
+        position: absolute;
+        left: 10px;
+        color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
-        color: #000000;
         font-weight: bold;
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
-    /* 當側邊欄收起時的顯示 */
+    /* 當側邊欄處於收合狀態時的文字切換 */
     [data-testid="stSidebar"][aria-expanded="false"] + section button[data-testid="stSidebarCollapseButton"]::after {
         content: "▶ 展開控制塔";
     }
 
-    /* 4. 📸 檔案上傳區中文化 (解決英文說明醜的問題) [cite: 2026-02-03] */
+    /* 4. 📸 檔案上傳區中文化優化 [cite: 2026-02-03] */
     section[data-testid="stFileUploadDropzone"] span { visibility: hidden; }
     section[data-testid="stFileUploadDropzone"]::before {
         content: "📸 拖曳圖片至此或點擊下方按鈕 ➔";
