@@ -10,7 +10,7 @@ except ImportError:
     st.error("❌ 零件缺失！請確保已安裝 pymupdf 與 edge-tts。")
     st.stop()
 
-# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、固定側邊欄) [cite: 2026-02-03] ---
+# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、封印側邊欄) [cite: 2026-02-03] ---
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
 st.markdown("""
     <style>
@@ -19,25 +19,32 @@ st.markdown("""
         background-color: #ffffff !important; 
     }
     
-    /* 修正：強制所有輸入區塊背景為白色，防止說明文字被蓋掉 [cite: 2026-02-03] */
-    [data-testid="stNumberInput"], [data-testid="stTextInput"], [data-baseweb="input"] {
-        background-color: #ffffff !important;
-    }
-
-    html, body, .stMarkdown, p, span, label, li, h1, h2, h3 {
-        color: #000000 !important;
-        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
-    }
-    
-    /* 2. 側邊欄固定協議：鎖定寬度 320px 並移除開合按鈕 [cite: 2026-02-03] */
+    /* 2. 側邊欄固定協議：鎖定寬度 320px 並「徹底抹除」所有按鈕元件 [cite: 2026-02-03] */
     [data-testid="stSidebar"] { 
         min-width: 320px !important; 
         max-width: 320px !important; 
     }
     
-    /* 徹底拿掉會產生殘留文字的開合按鈕 [cite: 2026-02-03] */
+    /* 暴力移除：不只是隱藏，是直接讓它不佔用空間，防止文字殘留 [cite: 2026-02-03] */
     button[data-testid="stSidebarCollapseButton"] {
         display: none !important;
+        position: absolute !important;
+        width: 0px !important;
+        height: 0px !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+
+    /* 3. 輸入框外框校準：強制顯示外框，讓學生一眼看到方框 [cite: 2026-02-03] */
+    [data-baseweb="input"] {
+        border: 1px solid #000000 !important;
+        background-color: #ffffff !important;
+        border-radius: 5px !important;
+    }
+
+    html, body, .stMarkdown, p, span, label, li, h1, h2, h3 {
+        color: #000000 !important;
+        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
 
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
@@ -75,7 +82,6 @@ st.divider()
 
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
-    # 確保曉臻只唸翻譯好的口語中文 [cite: 2026-02-03]
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
@@ -85,7 +91,7 @@ async def generate_voice_base64(text):
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
 # --- 3. 側邊欄：曉臻的科學動能控制塔 [cite: 2026-02-03] ---
-st.sidebar.title("🚪曉臻實驗室大門")
+st.sidebar.title("🚪實驗室大門即將打開")
 st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南：</b><br>
