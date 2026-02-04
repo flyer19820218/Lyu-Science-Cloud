@@ -15,7 +15,9 @@ st.set_page_config(page_title="臻·極速自然能量域", layout="wide")
 st.markdown("""
     <style>
     /* 1. 全局視覺鎖定 (白底黑字翩翩體) [cite: 2026-02-03] */
-    .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { background-color: #ffffff !important; }
+    .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { 
+        background-color: #ffffff !important; 
+    }
     html, body, .stMarkdown, p, span, label, li {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
@@ -25,34 +27,34 @@ st.markdown("""
     [data-testid="stSidebar"] { min-width: 300px !important; max-width: 300px !important; }
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
 
-    /* 3. 🛠️ 「打開/闔上」按鈕強力修復協議 (對齊與視覺風格鎖定) */
-button[data-testid="stSidebarCollapseButton"] {
-    font-size: 0px !important;
-    color: transparent !important;
-    width: 100px !important;
-    background-color: transparent !important;
-}
+    /* 3. 🛠️ 「打開/闔上」按鈕強力修復協議 (精準對齊版) */
+    button[data-testid="stSidebarCollapseButton"] {
+        font-size: 0px !important;
+        color: transparent !important;
+        width: 100px !important;
+        background-color: transparent !important;
+    }
 
-button[data-testid="stSidebarCollapseButton"] svg {
-    display: none !important;
-}
+    button[data-testid="stSidebarCollapseButton"] svg {
+        display: none !important;
+    }
 
-/* 預設狀態 (側邊欄開啟時)：顯示「闔上 ◀」 */
-button[data-testid="stSidebarCollapseButton"]::after {
-    content: "闔上 ◀";
-    font-size: 1.1rem !important;
-    color: #000000 !important;
-    font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
-    font-weight: bold;
-    visibility: visible;
-}
+    /* 預設狀態 (側邊欄開啟時)：顯示「闔上 ◀」 */
+    button[data-testid="stSidebarCollapseButton"]::after {
+        content: "闔上 ◀";
+        font-size: 1.1rem !important;
+        color: #000000 !important;
+        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
+        font-weight: bold;
+        visibility: visible;
+    }
 
-/* 當側邊欄「收合」後，強制變更為「▶ 打開」 */
-[data-testid="stHeader"] button[data-testid="stSidebarCollapseButton"]::after {
-    content: "▶ 打開" !important;
-    padding-left: 10px;
-    visibility: visible;
-}
+    /* 當側邊欄「收合」後，按鈕移至 Header，強制顯示為「▶ 打開」 */
+    [data-testid="stHeader"] button[data-testid="stSidebarCollapseButton"]::after {
+        content: "▶ 打開" !important;
+        padding-left: 10px;
+        visibility: visible;
+    }
 
     /* 4. 📸 檔案上傳區中文化 [cite: 2026-02-03] */
     section[data-testid="stFileUploadDropzone"] span { visibility: hidden; }
@@ -80,6 +82,7 @@ button[data-testid="stSidebarCollapseButton"]::after {
     </style>
     <meta name="color-scheme" content="light">
 """, unsafe_allow_html=True)
+
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
     # 確保曉臻只唸翻譯好的口語中文 [cite: 2026-02-03]
@@ -125,6 +128,7 @@ SYSTEM_PROMPT = """
    - 這樣做能確保聲紋穩定，且讓曉臻唸得清楚有韻律感。 [cite: 2026-02-03]
 6. 【真理激勵】：結尾必喊『這就是自然科學的真理！』並鼓勵同學不要在馬拉松半路放棄。
 """
+
 # 頁碼直選置頂 [cite: 2026-02-03]
 target_page = st.number_input("📍 請輸入/選擇講義頁碼 (1-64)", 1, 64, 1, key="main_pg")
 
@@ -136,10 +140,9 @@ if os.path.exists(pdf_path):
     pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
     img_data = Image.open(io.BytesIO(pix.tobytes()))
     
-    st.image(img_data, use_column_width=True) # 講義原圖 [cite: 2026-02-03]
+    st.image(img_data, use_container_width=True) # 修正為最新的 Streamlit 參數
     st.divider()
     
-    # 備課按鈕升級 [cite: 2026-02-03]
     if st.button("🏃‍♀️ 曉臻：心率同步，進入備課衝刺！"):
         if not user_key:
             st.warning("⚠️ 值日生請注意：尚未轉動啟動金鑰！")
@@ -147,7 +150,8 @@ if os.path.exists(pdf_path):
             with st.spinner("曉臻正在努力備課中，請稍等!你可以先喝杯珍奶..."):
                 try:
                     genai.configure(api_key=user_key)
-                    MODEL = genai.GenerativeModel('models/gemini-2.5-flash')
+                    # 鎖定模型為 gemini-2.0-flash 或 gemini-1.5-flash (根據環境調整)
+                    MODEL = genai.GenerativeModel('gemini-1.5-flash') 
                     prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。若有練習題請先讓學生練習，然後對答案並解說。"
                     res = MODEL.generate_content([prompt, img_data])
                     
