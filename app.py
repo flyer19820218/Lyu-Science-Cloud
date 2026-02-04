@@ -10,8 +10,10 @@ except ImportError:
     st.error("❌ 零件缺失！請確保已安裝 pymupdf 與 edge-tts。")
     st.stop()
 
-# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、封印側邊欄) [cite: 2026-02-03] ---
+# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄恆定展開) [cite: 2026-02-03] ---
+# initial_sidebar_state="expanded" 確保預設就是打開的
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
+
 st.markdown("""
     <style>
     /* 1. 全局視覺鎖定 (白底黑字翩翩體) [cite: 2026-02-03] */
@@ -19,29 +21,32 @@ st.markdown("""
         background-color: #ffffff !important; 
     }
     
-    /* 2. 側邊欄固定協議：鎖定寬度 320px 並「徹底抹除」所有按鈕元件 [cite: 2026-02-03] */
+    /* 2. 側邊欄固定協議：鎖定寬度 320px [cite: 2026-02-03] */
     [data-testid="stSidebar"] { 
         min-width: 320px !important; 
         max-width: 320px !important; 
     }
     
-    /* 暴力移除：不只是隱藏，是直接讓它不佔用空間，防止文字殘留 [cite: 2026-02-03] */
+    /* 3. 核心修復：徹底移除開合按鈕 (Display None) [cite: 2026-02-03] */
+    /* 讓按鈕完全消失，使用者無法點擊，也看不到任何殘留文字 */
     button[data-testid="stSidebarCollapseButton"] {
         display: none !important;
-        position: absolute !important;
-        width: 0px !important;
-        height: 0px !important;
         visibility: hidden !important;
-        opacity: 0 !important;
+    }
+    
+    /* 避免手機版或小螢幕出現浮動的漢堡選單，如果你希望手機版也能固定側邊欄，可以加上這段 */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: none !important;
     }
 
-    /* 3. 輸入框外框校準：強制顯示外框，讓學生一眼看到方框 [cite: 2026-02-03] */
+    /* 4. 輸入框外框校準：強制顯示黑色外框 [cite: 2026-02-03] */
     [data-baseweb="input"] {
         border: 1px solid #000000 !important;
         background-color: #ffffff !important;
         border-radius: 5px !important;
     }
 
+    /* 5. 字體規範：全黑翩翩體 */
     html, body, .stMarkdown, p, span, label, li, h1, h2, h3 {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
@@ -49,7 +54,7 @@ st.markdown("""
 
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
 
-    /* 4. 📸 檔案上傳區中文化 [cite: 2026-02-03] */
+    /* 6. 📸 檔案上傳區中文化 */
     section[data-testid="stFileUploadDropzone"] span { visibility: hidden; }
     section[data-testid="stFileUploadDropzone"]::before {
         content: "📸 拖曳圖片至此或點擊下方按鈕 ➔";
@@ -91,7 +96,7 @@ async def generate_voice_base64(text):
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
 # --- 3. 側邊欄：曉臻的科學動能控制塔 [cite: 2026-02-03] ---
-st.sidebar.title("🚪實驗室大門即將打開")
+st.sidebar.title("🚪 科學動能控制塔")
 st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南：</b><br>
