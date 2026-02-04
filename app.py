@@ -14,47 +14,44 @@ except ImportError:
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide")
 st.markdown("""
     <style>
-    /* 1. 全局白底黑字鎖定 (防蘋果手機自動黑底) [cite: 2026-02-03] */
-    .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { 
-        background-color: #ffffff !important; 
-    }
+    /* 1. 全局視覺鎖定 (白底黑字翩翩體) [cite: 2026-02-03] */
+    .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { background-color: #ffffff !important; }
     html, body, .stMarkdown, p, span, label, li {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
     
-    /* 2. 側邊欄縮小至 300px [cite: 2026-02-03] */
+    /* 2. 側邊欄黃金比例 300px [cite: 2026-02-03] */
     [data-testid="stSidebar"] { min-width: 300px !important; max-width: 300px !important; }
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
-    
-    /* 3. 🛠️ 側邊欄收合按鈕「強力除錯」終極版 */
+
+    /* 3. 🛠️ 「打開/闔上」按鈕強力修復協議 (解決 keyboard_double_ 殘留) */
     button[data-testid="stSidebarCollapseButton"] {
-        font-size: 0 !important; /* 核心：徹底殺掉 keyboard_double_ 文字 */
-        color: transparent !important;
-        background-color: transparent !important;
-        min-width: 130px !important; /* 給予足夠寬度顯示中文 */
-        text-align: left !important;
+        font-size: 0px !important;     /* 強制讓原本的英文文字消失 */
+        color: transparent !important; /* 讓原本的顏色透明 */
+        width: auto !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
     }
     button[data-testid="stSidebarCollapseButton"] svg {
-        display: none !important; /* 隱藏原本壞掉的圖示 */
+        display: none !important;      /* 隱藏原本壞掉的箭頭圖示 */
     }
-    /* 注入自定義中文內容，並將字體大小調回來 */
+    /* 重新注入中文「闔上」標籤 */
     button[data-testid="stSidebarCollapseButton"]::after {
-        content: "◀ 收合控制塔"; 
-        visibility: visible;
-        display: inline-block;
-        font-size: 1rem !important; 
-        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
+        content: "闔上 ◀"; 
+        font-size: 1.1rem !important;
         color: #000000 !important;
+        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
         font-weight: bold;
+        visibility: visible;
+    }
+    /* 當側邊欄「處於收合狀態」時，注入中文「打開」標籤 */
+    [data-testid="stSidebar"][aria-expanded="false"] + section button[data-testid="stSidebarCollapseButton"]::after {
+        content: "▶ 打開";
         padding-left: 5px;
     }
-    /* 當側邊欄收起時切換文字 */
-    [data-testid="stSidebar"][aria-expanded="false"] + section button[data-testid="stSidebarCollapseButton"]::after {
-        content: "▶ 展開控制塔";
-    }
 
-    /* 4. 📸 檔案上傳區中文化優化 [cite: 2026-02-03] */
+    /* 4. 📸 檔案上傳區中文化 [cite: 2026-02-03] */
     section[data-testid="stFileUploadDropzone"] span { visibility: hidden; }
     section[data-testid="stFileUploadDropzone"]::before {
         content: "📸 拖曳圖片至此或點擊下方按鈕 ➔";
