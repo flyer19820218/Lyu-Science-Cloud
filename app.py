@@ -11,7 +11,7 @@ except ImportError:
     st.stop()
 
 # --- 1. 核心視覺規範 (深度白晝協議：全白、全黑、翩翩體) [cite: 2026-02-03] ---
-st.set_page_config(page_title="臻·極速自然能量域", layout="wide")
+st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
 st.markdown("""
     <style>
     /* 1. 全局視覺鎖定 (白底黑字翩翩體) [cite: 2026-02-03] */
@@ -19,7 +19,7 @@ st.markdown("""
         background-color: #ffffff !important; 
     }
     
-    /* 修正：強制所有輸入區塊背景為白色，防止說明文字被蓋掉 */
+    /* 修正：強制所有輸入區塊背景為白色，防止說明文字被蓋掉 [cite: 2026-02-03] */
     [data-testid="stNumberInput"], [data-testid="stTextInput"], [data-baseweb="input"] {
         background-color: #ffffff !important;
     }
@@ -29,36 +29,16 @@ st.markdown("""
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
     
-    /* 2. 側邊欄黃金比例 300px [cite: 2026-02-03] */
-    [data-testid="stSidebar"] { min-width: 300px !important; max-width: 300px !important; }
-    .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
-
-    /* 3. 🛠️ 「打開/闔上」按鈕強力修復協議 (精準對齊版) [cite: 2026-02-03] */
-    button[data-testid="stSidebarCollapseButton"] {
-        font-size: 0px !important;
-        color: transparent !important;
-        width: 100px !important;
-        background-color: transparent !important;
+    /* 2. 側邊欄固定寬度與移除切換按鈕 [cite: 2026-02-03] */
+    [data-testid="stSidebar"] { 
+        min-width: 320px !important; 
+        max-width: 320px !important; 
     }
-
-    button[data-testid="stSidebarCollapseButton"] svg {
+    button[data-testid="stSidebarCollapseButton"] {
         display: none !important;
     }
 
-    button[data-testid="stSidebarCollapseButton"]::after {
-        content: "闔上 ◀";
-        font-size: 1.1rem !important;
-        color: #000000 !important;
-        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
-        font-weight: bold;
-        visibility: visible;
-    }
-
-    [data-testid="stHeader"] button[data-testid="stSidebarCollapseButton"]::after {
-        content: "▶ 打開" !important;
-        padding-left: 10px;
-        visibility: visible;
-    }
+    .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
 
     /* 4. 📸 檔案上傳區中文化 [cite: 2026-02-03] */
     section[data-testid="stFileUploadDropzone"] span { visibility: hidden; }
@@ -86,14 +66,15 @@ st.markdown("""
     <meta name="color-scheme" content="light">
 """, unsafe_allow_html=True)
 
-# --- 🚀 標題重置：現在大標題回來了 ---
+# --- 🚀 標題 ---
 st.title("🏃‍♀️ 臻 · 極速自然能量域")
 st.markdown("### 🔬 資深理化老師 AI 助教：曉臻老師陪你衝刺科學馬拉松")
 st.divider()
 
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
-    clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」]', '', text)
+    # 確保曉臻只唸翻譯好的口語中文，去除不必要的符號影響聲線 [cite: 2026-02-03]
+    clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
     async for chunk in communicate.stream():
@@ -101,8 +82,8 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
-# --- 3. 側邊欄：曉臻的科學實驗室任意門 [cite: 2026-02-03] ---
-st.sidebar.title("🚪 曉臻的科學動能控制塔") # 這裡是控制塔入口
+# --- 3. 側邊欄：曉臻的科學動能控制塔 [cite: 2026-02-03] ---
+st.sidebar.title("🚪 科學動能控制塔")
 st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南：</b><br>
@@ -111,31 +92,30 @@ st.sidebar.markdown("""
     3. 貼回下方金鑰區開啟能量域！
 </div>
 """, unsafe_allow_html=True)
-user_key = st.sidebar.text_input("🔑 值日生專屬：實驗室啟動金鑰", type="password", key="tower_key")
+user_key = st.sidebar.text_input("🔑 實驗室啟動金鑰", type="password", key="tower_key")
 
 st.sidebar.divider()
 st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", placeholder="例如：什麼是質量守恆？", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
-# --- 4. 曉臻教學指令 (真理對答案) [cite: 2026-02-03] ---
+# --- 4. 曉臻教學 6 項核心指令 (真理對答案完整回歸版) [cite: 2026-02-03] ---
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
 
 1. 【熱血開場】：隨機 30 秒聊「運動對大腦的科學好處」或馬拉松訓練心得。嚴禁編造比分，必含『熱身一下下課老師就要去跑步了』。
 2. 【練習題偵測】：偵測「練習」字樣或空白填空。先公佈正確答案，再啟動「分段配速解說」，像拆解馬拉松戰術一樣詳細。
-3. 【上下文串連】：通讀全圖，將教學概念與練習題連結，優先使用「珍珠奶茶」邏輯解釋。嚴禁描述顏色字體。
+3. 【上下文串連】：通讀全圖，將教學概念與練習題連結，優先使用「珍珠奶茶」邏輯解釋（n=m/M）。嚴禁描述顏色字體。
 4. 【導航】：腳本開頭必說：『各位同學，請翻到第 X 頁。』
 5. 【轉譯規範：極致清晰版】：
-   - LaTeX 公式轉口語時，嚴禁讓 AI 直接輸出符號（如 H2O2）。
+   - LaTeX 公式轉口語時，嚴禁讓 AI 直接輸出符號（如 H2O2 或 n=m/M）。
    - 必須將所有英文單字與數字「完全拆開」，且每個字後方都加上「～～」拉長音標記與空格。
    - 例如：O2 寫作「O～～ two～～」。
    - 例如：H2O2 寫作「H～～ two～～ O～～ two～～」。
-   - 例如：CO2 寫作「C～～ O～～ two～～」。
+   - 例如：n = m/M 寫作「n～～ 等於～～ m～～ 除以～～ M～～」。
    - 這樣做能確保聲紋穩定，且讓曉臻唸得清楚有韻律感。 [cite: 2026-02-03]
 6. 【真理激勵】：結尾必喊『這就是自然科學的真理！』並鼓勵同學不要在馬拉松半路放棄。
 """
-
 
 target_page = st.number_input("📍 請輸入/選擇講義頁碼 (1-64)", 1, 64, 1, key="main_pg")
 
@@ -154,12 +134,14 @@ if os.path.exists(pdf_path):
         if not user_key:
             st.warning("⚠️ 值日生請注意：尚未轉動啟動金鑰！")
         else:
-            with st.spinner("曉臻正在努力備課中..."):
+            with st.spinner("曉臻正在努力備課中，請稍等!你可以先喝杯珍奶..."):
                 try:
                     genai.configure(api_key=user_key)
+                    # 鎖定模型型號 [cite: 2026-02-03]
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
-                    prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。"
+                    prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。若有練習題請先讓學生練習，然後對答案並解說。"
                     res = MODEL.generate_content([prompt, img_data])
+                    
                     st.info(f"🔊 曉臻正在進行音速破風導讀！")
                     st.markdown(asyncio.run(generate_voice_base64(res.text)), unsafe_allow_html=True)
                     st.balloons()
