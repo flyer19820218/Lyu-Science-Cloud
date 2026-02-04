@@ -14,21 +14,61 @@ except ImportError:
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide")
 st.markdown("""
     <style>
-    .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { background-color: #ffffff !important; }
+    /* 1. 全局白底黑字鎖定 (防蘋果手機自動黑底) [cite: 2026-02-03] */
+    .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { 
+        background-color: #ffffff !important; 
+    }
     html, body, .stMarkdown, p, span, label, li {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
-    /* 側邊欄縮小至 300px [cite: 2026-02-03] */
+    
+    /* 2. 側邊欄縮小至 300px [cite: 2026-02-03] */
     [data-testid="stSidebar"] { min-width: 300px !important; max-width: 300px !important; }
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
     
+    /* 3. 🛠️ 側邊欄收合按鈕優化 (解決 keyboard_double 英文醜的問題) */
+    button[data-testid="stSidebarCollapseButton"] svg {
+        display: none !important; /* 隱藏原本醜醜的箭頭 */
+    }
+    button[data-testid="stSidebarCollapseButton"]::after {
+        content: "◀ 收合控制塔"; /* 改為中文與箭頭 */
+        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
+        color: #000000;
+        font-weight: bold;
+        font-size: 1rem;
+    }
+    /* 當側邊欄收起時的顯示 */
+    [data-testid="stSidebar"][aria-expanded="false"] + section button[data-testid="stSidebarCollapseButton"]::after {
+        content: "▶ 展開控制塔";
+    }
+
+    /* 4. 📸 檔案上傳區中文化 (解決英文說明醜的問題) [cite: 2026-02-03] */
+    section[data-testid="stFileUploadDropzone"] span { visibility: hidden; }
+    section[data-testid="stFileUploadDropzone"]::before {
+        content: "📸 拖曳圖片至此或點擊下方按鈕 ➔";
+        visibility: visible;
+        display: block;
+        color: #000000;
+        font-weight: bold;
+        text-align: center;
+    }
+    section[data-testid="stFileUploadDropzone"] button::after {
+        content: "🔍 瀏覽檔案";
+        visibility: visible;
+        display: block;
+        background-color: #f0f2f6;
+        padding: 5px 10px;
+        border-radius: 5px;
+        color: #000000;
+    }
+    [data-testid="stFileUploaderSmall"] { display: none !important; }
+
     @media (prefers-color-scheme: dark) { .stApp { background-color: #ffffff !important; color: #000000 !important; } }
     .guide-box { border: 2px dashed #01579b; padding: 1rem; border-radius: 12px; background-color: #f0f8ff; color: #000000; }
     </style>
     <meta name="color-scheme" content="light">
 """, unsafe_allow_html=True)
-
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
     # 確保曉臻只唸翻譯好的口語中文 [cite: 2026-02-03]
