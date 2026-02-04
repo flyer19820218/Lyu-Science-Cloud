@@ -10,7 +10,7 @@ except ImportError:
     st.error("❌ 零件缺失！請確保已安裝 pymupdf 與 edge-tts。")
     st.stop()
 
-# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄恆定展開) [cite: 2026-02-03] ---
+# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、側邊欄預設展開) [cite: 2026-02-03] ---
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -37,27 +37,17 @@ st.markdown("""
         max-width: 320px !important; 
     }
     
-    /* 4. 核災級隱藏修復：針對 keyboard_double_arrow_right 文字殘留 [cite: 2026-02-03] */
-    button[data-testid="stSidebarCollapseButton"],
-    button[data-testid="stSidebarCollapseButton"] > *,
-    [data-testid="stSidebarCollapsedControl"] {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0px !important;
-        width: 0px !important;
-        font-size: 0px !important;
-        color: transparent !important;
-        opacity: 0 !important;
-        z-index: -100 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    /* 隱藏 Header 避免擋住 */
+    /* 4. 按鈕回歸協議：移除隱藏代碼，只調整顏色 */
+    /* 我們移除了 display: none，讓箭頭按鈕正常顯示 */
     header[data-testid="stHeader"] {
         background-color: transparent !important;
-        height: 0px !important;
-        z-index: -1 !important;
+        z-index: 1 !important; /* 確保按鈕在最上層 */
+    }
+    
+    /* 設定按鈕顏色為黑色，讓它在白底上看得見 */
+    button[data-testid="stSidebarCollapseButton"] {
+        color: #000000 !important;
+        display: block !important; /* 強制顯示 */
     }
 
     /* 5. 輸入元件美化：純白圖塊 + 淺灰邊框 [cite: 2026-02-03] */
@@ -71,8 +61,7 @@ st.markdown("""
     [data-baseweb="select"] > div { background-color: #ffffff !important; color: #000000 !important; }
     [data-baseweb="input"] input, [data-baseweb="select"] div { color: #000000 !important; }
 
-    /* 6. 字體規範：全黑翩翩體 (關鍵修正：移除 span) [cite: 2026-02-03] */
-    /* 修正說明：移除了 'span'，因為圖示(Icon)通常是 span，強制改字體會讓圖示變成文字亂碼 */
+    /* 6. 字體規範：全黑翩翩體 (關鍵：排除 span 以防止圖示變亂碼) [cite: 2026-02-03] */
     html, body, .stMarkdown, p, label, li, h1, h2, h3, .stButton button, a {
         color: #000000 !important;
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
@@ -128,10 +117,10 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
-# --- 3. 側邊欄：更新標題為「打開實驗室大門-金鑰」 ---
+# --- 3. 側邊欄：標題與內容 ---
 st.sidebar.title("🚪 打開實驗室大門-金鑰")
 
-# 使用說明區塊
+# 使用說明區塊 (保留你的原始文案與修正後的 Email 連結)
 st.sidebar.markdown("""
 <div class="info-box">
     <b>📢 曉臻老師的叮嚀：</b><br>
