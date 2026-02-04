@@ -10,7 +10,7 @@ except ImportError:
     st.error("❌ 零件缺失！請確保已安裝 pymupdf 與 edge-tts。")
     st.stop()
 
-# --- 1. 核心視覺規範 (深度白晝協議：全白、全黑、翩翩體) [cite: 2026-02-03] ---
+# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體、固定側邊欄) [cite: 2026-02-03] ---
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
 st.markdown("""
     <style>
@@ -29,11 +29,13 @@ st.markdown("""
         font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
     
-    /* 2. 側邊欄固定寬度與移除切換按鈕 [cite: 2026-02-03] */
+    /* 2. 側邊欄固定協議：鎖定寬度 320px 並移除開合按鈕 [cite: 2026-02-03] */
     [data-testid="stSidebar"] { 
         min-width: 320px !important; 
         max-width: 320px !important; 
     }
+    
+    /* 徹底拿掉會產生殘留文字的開合按鈕 [cite: 2026-02-03] */
     button[data-testid="stSidebarCollapseButton"] {
         display: none !important;
     }
@@ -66,14 +68,14 @@ st.markdown("""
     <meta name="color-scheme" content="light">
 """, unsafe_allow_html=True)
 
-# --- 🚀 標題 ---
+# --- 🚀 標題重置 ---
 st.title("🏃‍♀️ 臻 · 極速自然能量域")
 st.markdown("### 🔬 資深理化老師 AI 助教：曉臻老師陪你衝刺科學馬拉松")
 st.divider()
 
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
-    # 確保曉臻只唸翻譯好的口語中文，去除不必要的符號影響聲線 [cite: 2026-02-03]
+    # 確保曉臻只唸翻譯好的口語中文 [cite: 2026-02-03]
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
@@ -83,7 +85,7 @@ async def generate_voice_base64(text):
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
 # --- 3. 側邊欄：曉臻的科學動能控制塔 [cite: 2026-02-03] ---
-st.sidebar.title("🚪 科學動能控制塔")
+st.sidebar.title("🚪曉臻實驗室大門")
 st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南：</b><br>
@@ -108,7 +110,7 @@ SYSTEM_PROMPT = """
 3. 【上下文串連】：通讀全圖，將教學概念與練習題連結，優先使用「珍珠奶茶」邏輯解釋（n=m/M）。嚴禁描述顏色字體。
 4. 【導航】：腳本開頭必說：『各位同學，請翻到第 X 頁。』
 5. 【轉譯規範：極致清晰版】：
-   - LaTeX 公式轉口語時，嚴禁讓 AI 直接輸出符號（如 H2O2 或 n=m/M）。
+   - LaTeX 公式轉口語時，嚴禁讓 AI 直接輸出符號（如 H2O2）。
    - 必須將所有英文單字與數字「完全拆開」，且每個字後方都加上「～～」拉長音標記與空格。
    - 例如：O2 寫作「O～～ two～～」。
    - 例如：H2O2 寫作「H～～ two～～ O～～ two～～」。
@@ -137,7 +139,6 @@ if os.path.exists(pdf_path):
             with st.spinner("曉臻正在努力備課中，請稍等!你可以先喝杯珍奶..."):
                 try:
                     genai.configure(api_key=user_key)
-                    # 鎖定模型型號 [cite: 2026-02-03]
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
                     prompt = f"{SYSTEM_PROMPT}\n請導讀第 {target_page} 頁。若有練習題請先讓學生練習，然後對答案並解說。"
                     res = MODEL.generate_content([prompt, img_data])
