@@ -97,7 +97,6 @@ st.divider()
 
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
-    # 確保曉臻只唸翻譯好的口語中文
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
@@ -124,7 +123,6 @@ student_q = st.sidebar.text_input("打字問曉臻：", placeholder="例如：�
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
 # --- 4. 曉臻教學 6 項核心指令 (5頁連擊強化版) [cite: 2026-02-03] ---
-# 增加了換頁引導的指令
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
 
@@ -150,7 +148,6 @@ with col1:
 with col2:
     chap_select = st.selectbox("🧪 章節選擇", ["第一章", "第二章", "第三章", "第四章", "第五章", "第六章"], index=0)
 with col3:
-    # 這裡改成「起始頁碼」，邏輯變更為「從這頁開始讀5頁」
     start_page = st.number_input("🏁 起始頁碼 (一次衝刺5頁)", 1, 100, 1, key="start_pg")
 
 # 檔名組合 (範例)
@@ -161,7 +158,7 @@ else:
 
 pdf_path = os.path.join("data", filename)
 
-# 初始化 Session State 來存儲課程狀態
+# 初始化 Session State
 if "class_started" not in st.session_state:
     st.session_state.class_started = False
 if "audio_html" not in st.session_state:
@@ -172,33 +169,42 @@ if "display_images" not in st.session_state:
 # --- 主畫面邏輯 ---
 
 if not st.session_state.class_started:
-    # 狀態 A: 備課中 (顯示封面圖，不讀 PDF，不燒 Token)
-    cover_path = os.path.join("data", "cover.jpg") # 假設有一張封面圖
+    # 狀態 A: 備課中 (顯示封面圖)
     
-    # 顯示封面 (如果沒有圖就顯示預設文字)
-    if os.path.exists(cover_path):
-        st.image(cover_path, caption="曉臻老師正在操場熱身準備中...", use_container_width=True)
+    # 修正：自動偵測 jpg, jpeg, png 等格式
+    cover_image_path = None
+    possible_extensions = [".jpg", ".jpeg", ".png", ".JPG", ".PNG"]
+    
+    for ext in possible_extensions:
+        temp_path = os.path.join("data", f"cover{ext}")
+        if os.path.exists(temp_path):
+            cover_image_path = temp_path
+            break
+            
+    # 顯示封面
+    if cover_image_path:
+        st.image(cover_image_path, caption="曉臻老師正在操場熱身準備中...", use_container_width=True)
     else:
-        # 如果使用者還沒放封面圖，顯示一個漂亮的 placeholder
-        st.info("🏃‍♀️ 曉臻老師正在起跑線上熱身... (請在 data 資料夾放入 cover.jpg 以顯示封面)")
+        # 如果真的找不到檔案
+        st.info("🏃‍♀️ 曉臻老師正在起跑線上熱身... (請在 data 資料夾放入 cover.jpg 或 cover.png 以顯示封面)")
     
     st.divider()
     
-    # 大大的備課按鈕
+    # 備課按鈕
     if st.button(f"🏃‍♀️ 開始 25 分鐘馬拉松課程 (第 {start_page} ~ {start_page+4} 頁)", type="primary", use_container_width=True):
         if not user_key:
             st.warning("⚠️ 值日生請注意：尚未轉動啟動金鑰！")
         elif not os.path.exists(pdf_path):
             st.error(f"❌ 找不到課本：{filename}")
         else:
-            # --- 啟動備課流程 (這時候才讀 PDF & Call API) ---
+            # --- 啟動備課流程 ---
             with st.spinner("曉臻正在極速翻閱 5 頁講義，腦袋高速運轉中... (請稍候，這是一場長跑)"):
                 try:
                     doc = fitz.open(pdf_path)
                     images_to_process = []
                     display_images_list = []
                     
-                    # 讀取連續 5 頁 (如果後面沒頁數了就讀到最後一頁)
+                    # 讀取連續 5 頁
                     pages_to_read = range(start_page - 1, min(start_page + 4, len(doc)))
                     
                     if len(pages_to_read) == 0:
@@ -210,52 +216,45 @@ if not st.session_state.class_started:
                         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
                         img = Image.open(io.BytesIO(pix.tobytes()))
                         images_to_process.append(img)
-                        display_images_list.append((page_num + 1, img)) # 存起來等等顯示
+                        display_images_list.append((page_num + 1, img))
                     
                     # Call Gemini
                     genai.configure(api_key=user_key)
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
                     
-                    # 提示詞加入圖片數量資訊
                     prompt = f"{SYSTEM_PROMPT}\n現在請你一次導讀從第 {start_page} 頁到第 {pages_to_read[-1]+1} 頁的內容。請務必在換頁時提醒學生『請翻到第 X 頁』。"
                     
-                    # 將 Prompt 和 5 張圖片一起丟進去
                     content_payload = [prompt] + images_to_process
                     res = MODEL.generate_content(content_payload)
                     
                     # 生成語音
                     audio_html = asyncio.run(generate_voice_base64(res.text))
                     
-                    # 存入 Session State 並切換狀態
+                    # 存入 Session State 並切換
                     st.session_state.audio_html = audio_html
                     st.session_state.display_images = display_images_list
                     st.session_state.class_started = True
-                    st.rerun() # 重新整理頁面以進入上課模式
+                    st.rerun()
 
                 except Exception as e:
                     st.error(f"❌ 備課途中跌倒了：{e}")
 
 else:
-    # 狀態 B: 上課中 (顯示播放器與講義內容)
-    
+    # 狀態 B: 上課中
     st.success("🔔 噹噹噹！上課鐘響了，請專注 25 分鐘！")
     
-    # 1. 播放器置頂
     if st.session_state.audio_html:
         st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
     
     st.divider()
     
-    # 2. 顯示剛剛讀取的 5 頁講義 (讓學生自己可以對照看，或是用手邊的書)
     with st.expander("📖 點擊查看本次課程的 5 頁講義 (數位黑板)", expanded=True):
         for p_num, img in st.session_state.display_images:
             st.caption(f"--- 第 {p_num} 頁 ---")
             st.image(img, use_container_width=True)
             st.divider()
             
-    # 3. 下課按鈕
     if st.button("🏁 下課休息 (回到首頁)"):
-        # 清除狀態，回到首頁
         st.session_state.class_started = False
         st.session_state.audio_html = None
         st.session_state.display_images = []
