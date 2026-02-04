@@ -135,7 +135,7 @@ st.sidebar.markdown("""
     <b>📖 值日生啟動指南：</b><br>
     1. 前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#01579b; font-weight:bold;">Google AI Studio</a>。<br>
     2. 點擊 <b>Create API key</b> 並勾選同意。<br>
-    3. 貼回下方金鑰區開啟能量域！
+    3. 貼回下方金鑰區打開實驗室大門！
 </div>
 """, unsafe_allow_html=True)
 user_key = st.sidebar.text_input("🔑 實驗室啟動金鑰", type="password", key="tower_key")
