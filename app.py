@@ -113,9 +113,6 @@ async def generate_voice_base64(text):
     # 這裡只處理「補給站」這種需要文字正確但發音要準的詞
     voice_text = text.replace("補給", "補己") 
     
-    # 【化學式與數字：AI 已經幫我們在 text 裡面加好 ～～ 了】
-    # 所以我們不用在這裡寫 replace("H2O", "H～～ two～～ O～～")
-    
     # 清理掉 edge-tts 不認識的符號，只留下中文、數字、英文和長音符號 ～～
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', voice_text)
     
@@ -190,6 +187,7 @@ SYSTEM_PROMPT = """
      * H2O2 寫作「H～～ two～～ O～～ two～～ 」
      * n = m/M 寫作「n～～ 等於～～ m～～ 除以～～ M～～ 」
      * 50g 寫作「五十克～～」
+     * 75% 寫作「百之七十五～～」
 
 6. 【真理激勵】：
    - 在 5 頁全部導讀完畢的最後，必喊：『這就是自然科學的真理！』。
