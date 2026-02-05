@@ -10,18 +10,20 @@ except ImportError:
     st.error("❌ 零件缺失！")
     st.stop()
 
-# --- 1. 核心視覺規範 ---
+# --- 1. 核心視覺規範 (全白背景、全黑文字、翩翩體) ---
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
     <style>
-    .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { background-color: #ffffff !important; }
+    .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { 
+        background-color: #ffffff !important; 
+    }
     div.block-container { padding-top: 1rem !important; padding-bottom: 2rem !important; }
     section[data-testid="stSidebar"] > div { padding-top: 1rem !important; }
     [data-testid="stSidebar"] { min-width: 320px !important; max-width: 320px !important; }
     header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1 !important; }
     button[data-testid="stSidebarCollapseButton"] { color: #000000 !important; display: block !important; }
-    [data-baseweb="input"], [data-baseweb="select"], [data-testid="stNumberInput"] div, [data-testid="stTextInput"] div {
+    [data-baseweb="input"], [data-baseweb="select"], [data-testid="stNumberInput"] div, [data-testid="stTextInput"] div, [data-testid="stSelectbox"] > div > div {
         background-color: #ffffff !important; border: 1px solid #d1d5db !important; border-radius: 6px !important;
     }
     html, body, .stMarkdown, p, label, li, h1, h2, h3, .stButton button, a {
@@ -30,6 +32,7 @@ st.markdown("""
     .stButton button { border: 2px solid #000000 !important; background-color: #ffffff !important; font-weight: bold !important; }
     .stMarkdown p { font-size: calc(1rem + 0.3vw) !important; }
     @media (prefers-color-scheme: dark) { .stApp { background-color: #ffffff !important; color: #000000 !important; } }
+    .guide-box { border: 2px dashed #01579b; padding: 1rem; border-radius: 12px; background-color: #f0f8ff; color: #000000; }
     .info-box { border: 1px solid #ddd; padding: 1rem; border-radius: 8px; background-color: #f9f9f9; font-size: 0.9rem; }
     .transcript-box { background-color: #fdfdfd; border-left: 5px solid #000; padding: 15px; margin-bottom: 25px; line-height: 1.6; }
     </style>
@@ -39,7 +42,7 @@ st.title("🏃‍♀️ 臻 · 極速自然能量域")
 st.markdown("### 🔬 資深理化老師 AI 助教：曉臻老師陪你衝刺科學馬拉松")
 st.divider()
 
-# --- 2. 曉臻語音引擎 (暴力發音修正) ---
+# --- 2. 曉臻語音引擎 (暴力音正) ---
 async def generate_voice_base64(text):
     # 【暴力發音修正辭典】
     corrections = {
@@ -49,16 +52,14 @@ async def generate_voice_base64(text):
         "75%": "百分之七十五",
         "Acetic acid": "醋酸",
         "%": "趴",
-        "75g":"75公克"
     }
     voice_text = text
     for word, correct in corrections.items():
         voice_text = voice_text.replace(word, correct)
     
-    # 全自動章節修正：將「數字-數字」唸成「數字之數字」 (例如 1-2 -> 1之2)
+    # 章節自動修正 (例如 3-1 -> 3之1)
     voice_text = re.sub(r'(\d+)-(\d+)', r'\1之\2', voice_text)
     
-    # 清理非發音符號，保留「～～」讓發音變慢
     clean_text = voice_text.replace("$", "")
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', clean_text)
     
@@ -69,41 +70,58 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
-# --- 💡 視覺文字洗淨邏輯 ---
+# --- 💡 視覺濾鏡 (讓文字稿正常書寫) ---
 def clean_for_eye(text):
-    # 移除語音助記標記，讓學生看到正規文字
     t = text.replace("---PAGE_SEP---", "")
     t = re.sub(r'([a-zA-Z0-9])～～\s*', r'\1', t) 
     t = t.replace("～～", "")
     return t
 
-# --- 3. 側邊欄 (保留您的原始內容) ---
+# --- 3. 側邊欄 (原封不動還給老師！) ---
 st.sidebar.title("🚪 打開實驗室大門-金鑰")
-st.sidebar.markdown("""<div class="info-box"><b>📢 曉臻老師的叮嚀：</b>曉臻是 AI，不一定完全對，但別小看她...</div>""", unsafe_allow_html=True)
+
+# 這裡絕對不縮減，維持老師原始設定
+st.sidebar.markdown("""
+<div class="info-box">
+    <b>📢 曉臻老師的叮嚀：</b><br>
+    曉臻是 AI，不一定完全對，但別小看她。一般的考試可是輕輕鬆鬆考滿分！曉臻怕大家會不專心，一次只會上5頁的講義。想要繼續上課，選好頁碼，再按一次就可以了。有發現什麼 Bug，請來信：<br>
+    <a href="mailto:flyer19820218@gmail.com" style="color: #01579b; text-decoration: none; font-weight: bold;">flyer19820218@gmail.com</a>
+</div>
+<br>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown("""
+<div class="guide-box">
+    <b>📖 值日生啟動指南：</b><br>
+    1. 前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#01579b; font-weight:bold;">Google AI Studio</a>。<br>
+    2. 點擊 <b>Create API key</b> 並勾選同意。<br>
+    3. 貼回下方金鑰區打開實驗室
+</div>
+""", unsafe_allow_html=True)
 user_key = st.sidebar.text_input("🔑 實驗室啟動金鑰", type="password", key="tower_key")
+
 st.sidebar.divider()
+st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
-# --- 4. 曉臻教學 6 項核心指令 (最終範例後退版) ---
+# --- 4. 曉臻教學 6 項核心指令 ---
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
-你現在要進行一次導讀連續 5 頁講義的課程。請遵守以下規範：
+你現在要進行一次導讀連續 5 頁講義的課程。請遵守規範：
 
-1. 【開場】：隨機 30 秒聊運動對大腦的好處。結尾必含：『熱身一下下課老師就要去跑步了』。
-2. 【翻頁】：除第一頁外，解說完當頁內容才唸『翻到第 X 頁』。每頁解說「最開頭」加上標籤『---PAGE_SEP---』。
+1. 【開場】：聊運動大腦科學。必含：『熱身一下下課老師就要去跑步了』。
+2. 【翻頁】：解說完當頁才唸『翻到第 X 頁』。每頁解說最開頭加上標籤『---PAGE_SEP---』。
 3. 【練習偵測】：偵測題目先公佈「正確答案」，再啟動「分段配速解說」。
 4. 【上下文】：將 5 頁內容串接解說。
 5. 【轉譯規範】：
-   - ⚠️ 語音暴力：文字正常書寫「補給站」。
    - ⚠️ 慢速標記：英文、數字、化學式字母後方必須加「～～」與空格。
    - ⚠️ 結晶水處理：遇到點號（·），請在讀音導引中翻譯為『帶 X 個結晶水』。
-   - ⚠️ 彙整範例 (請嚴格參考)：
+   - ⚠️ 彙整範例：
      * 氧氣 ➔ $$O_{2}$$ (O～～ two～～ 也就是氧氣)
      * 乙醇 ➔ Ethanol (乙醇)
+     * 比例 ➔ 75% 寫作「百分之七十五～～」
      * 結晶水 ➔ $$CuSO_{4} \cdot 5H_{2}O$$ (C～～ u～～ S～～ O～～ four～～ 帶五個結晶水)
-     * 公式 ➔ n = m/M 寫作「n～～ 等於～～ m～～ 除以～～ M～～ 」
-
 6. 【真理激勵】：結尾必喊：『這就是自然科學的真理！』。
 """
 
@@ -111,7 +129,7 @@ SYSTEM_PROMPT = """
 col1, col2, col3 = st.columns([1, 1, 1])
 with col1: vol_select = st.selectbox("📚 冊別選擇", ["第一冊", "第二冊", "第三冊", "第四冊", "第五冊", "第六冊"], index=3)
 with col2: chap_select = st.selectbox("🧪 章節選擇", ["第一章", "第二章", "第三章", "第四章", "第五章", "第六章"], index=2)
-with col3: start_page = st.number_input("🏁 起始頁碼", 1, 100, 39, key="start_pg")
+with col3: start_page = st.number_input("🏁 起始頁碼", 1, 100, 1, key="start_pg")
 
 filename = f"{vol_select}_{chap_select}.pdf"
 pdf_path = os.path.join("data", filename)
@@ -128,11 +146,11 @@ if not st.session_state.class_started:
                 doc = fitz.open(pdf_path)
                 images_to_process, display_images_list = [], []
                 pages_to_read = range(start_page - 1, min(start_page + 4, len(doc)))
-                for p_num in pages_to_read:
-                    pix = doc.load_page(p_num).get_pixmap(matrix=fitz.Matrix(2, 2))
+                for p in pages_to_read:
+                    pix = doc.load_page(p).get_pixmap(matrix=fitz.Matrix(2, 2))
                     img = Image.open(io.BytesIO(pix.tobytes()))
                     images_to_process.append(img)
-                    display_images_list.append((p_num + 1, img))
+                    display_images_list.append((p + 1, img))
                 
                 genai.configure(api_key=user_key)
                 MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
@@ -158,6 +176,6 @@ else:
             st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b><br>{clean_for_eye(parts[i+1])}</div>', unsafe_allow_html=True)
         st.divider()
 
-    if st.button("🏁 下課休息 (回到首頁)"):
+    if st.button("🏁 下課休息"):
         st.session_state.class_started = False
         st.rerun()
