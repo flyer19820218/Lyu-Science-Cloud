@@ -109,11 +109,22 @@ st.divider()
 
 # --- 2. 曉臻語音引擎 (口語轉譯版) [cite: 2026-02-01, 2026-02-03] ---
 async def generate_voice_base64(text):
-    clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', text)
+    # 【暴力發音修正：名詞類】
+    # 這裡只處理「補給站」這種需要文字正確但發音要準的詞
+    voice_text = text.replace("補給", "補己") 
+    
+    # 【化學式與數字：AI 已經幫我們在 text 裡面加好 ～～ 了】
+    # 所以我們不用在這裡寫 replace("H2O", "H～～ two～～ O～～")
+    
+    # 清理掉 edge-tts 不認識的符號，只留下中文、數字、英文和長音符號 ～～
+    clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', voice_text)
+    
+    # 餵給語音引擎
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
     async for chunk in communicate.stream():
         if chunk["type"] == "audio": audio_data += chunk["data"]
+    
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
@@ -171,6 +182,7 @@ SYSTEM_PROMPT = """
 
 5. 【轉譯規範：極致清晰版】：
    - ⚠️ 為了語音引擎發音，LaTeX 公式轉口語時，嚴禁輸出原始符號。
+   - ⚠️ 語音暴力修正：所有的「補給站」一律在文字中輸出為『補給站』，確保語音唸成 jǐ。
    - 必須將所有「英文單字」與「數字」完全拆開。
    - 每個字符後方加上「～～」標記與一個空格。
    - 範例：
