@@ -109,8 +109,8 @@ st.sidebar.markdown("""
 <div class="guide-box">
     <b>📖 值日生啟動指南 (6項說明)：</b><br>
     1. 前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#01579b; font-weight:bold;">Google AI Studio</a>。<br>
-    2. 點擊 <b>Create API key</b> 按鈕。<br>
-    3. 選擇 <b>Create API key in new project</b>。<br>
+    2. 登入google帳號，第一次只要打勾即可產生金鑰<br>
+    3. 點擊 <b>Create API key</b> 按鈕。<br>
     4. 複製產生的金鑰代碼。<br>
     5. 貼回下方「實驗室啟動金鑰」區。<br>
     6. 按下 Enter 即可啟動曉臻助教！
