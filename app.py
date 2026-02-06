@@ -200,7 +200,7 @@ if not st.session_state.class_started:
     st.divider()
     if st.button(f"🏃‍♀️ 開始馬拉松課程", type="primary", use_container_width=True):
         if user_key and os.path.exists(pdf_path):
-            with st.spinner("曉臻正在翻閱講義..."):
+            with st.spinner("曉臻正在超音速備課中..."):
                 try:
                     doc = fitz.open(pdf_path)
                     images_to_process, display_images_list = [], []
@@ -212,7 +212,7 @@ if not st.session_state.class_started:
                         display_images_list.append((p + 1, img))
                     
                     genai.configure(api_key=user_key)
-                    MODEL = genai.GenerativeModel('models/gemini-1.5-flash')
+                    MODEL = genai.GenerativeModel('models/gemini-2.5-flash')
                     res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
                     
                     st.session_state.res_text = res.text
