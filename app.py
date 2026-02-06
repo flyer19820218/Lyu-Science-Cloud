@@ -61,13 +61,8 @@ st.divider()
 
 # --- 2. 曉臻語音引擎 (暴力音正 + 雜音過濾) ---
 async def generate_voice_base64(text):
-    # 【藍色標色區：暴力洗淨所有隱形字元】
-    voice_text = text.replace('\u00a0', ' ').replace("---PAGE_SEP---", " ")
-    
-    # 【藍色標色區：修正讀音邏輯，解決截圖中 dash 與連字號問題】
-    # 邏輯：將 3-1 轉為 3之1，將 圖一-dash-一 轉為 圖一之一
-    voice_text = re.sub(r'(\d+)-(\d+)', r'\1之\2', voice_text)
-    voice_text = voice_text.replace("-dash-", "之")
+    # 【關鍵】徹底抹除分頁標籤，防止唸出奇怪雜音
+    voice_text = text.replace("---PAGE_SEP---", " ")
     
     corrections = {
         "補給": "補己",
@@ -75,10 +70,12 @@ async def generate_voice_base64(text):
         "75%": "百分之七十五",
         "Acetic acid": "醋酸",
         "%": "趴",
-        "75g": "七十五公克",
     }
     for word, correct in corrections.items():
         voice_text = voice_text.replace(word, correct)
+    
+    # 章節自動修正 (例如 3-1 -> 3之1)
+    voice_text = re.sub(r'(\d+)-(\d+)', r'\1之\2', voice_text)
     
     clean_text = voice_text.replace("$", "")
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', clean_text)
@@ -98,7 +95,7 @@ def clean_for_eye(text):
     return t
 
 # --- 3. 側邊欄 (完整原封不動內容) ---
-st.sidebar.title("🚪 打開實驗室大門-金鑰")
+st.sidebar.title("門 打開實驗室大門-金鑰")
 
 st.sidebar.markdown("""
 <div class="info-box">
@@ -127,23 +124,23 @@ st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
-# --- 狀態初始化 ---
+# --- 修改點：確保圖片快取不會遺失 ---
 if "class_started" not in st.session_state: st.session_state.class_started = False
 if "display_images" not in st.session_state: st.session_state.display_images = []
 if "res_text" not in st.session_state: st.session_state.res_text = ""
    
 # --- 4. 曉臻教學核心指令 (防幻覺加強版) ---
 SYSTEM_PROMPT = """
-你是資深自然科學助教曉臻，馬拉松選手 (半馬PB 92分)。
+你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
 你現在要導讀連續 5 頁講義。請遵守規範：
 
 1. 【科學人開場】：
    - ⚠️ 嚴格限制：妳必須「僅限」從下方的【曉臻科學小知識庫】中隨機選取一則分享。
-   - 禁止自行虛擬、編造或引用此清單以外的科學小知識。
+   - 禁止自行虛擬、編造 or 引用此清單以外的科學小知識。
    - 格式：『根據科學研究...』或『在《科學人》相關報導中提到...』。
    - 結尾必含：『熱身一下下課老師就要去跑步了』。
 
-2. 【翻頁】：一開始要說明翻到第幾頁，解說完當頁內容才唸『翻到第 X 頁』。可以跟學生說喝口水，停頓2秒後，繼續上課。
+2. 【翻頁】：解說完當頁內容才唸『翻到第 X 頁』。每頁解說最開頭加上標籤『---PAGE_SEP---』。
 
 3. 【偵測】：僅當圖片明確出現「練習」二字才啟動題目模式。講義中的「底線」是重點提醒，嚴禁誤判為題目。
 
@@ -166,7 +163,7 @@ SYSTEM_PROMPT = """
 # --- 曉臻科學小知識庫 (來源：科學人與大腦科學研究) ---
 1. BDNF：運動能促進「腦源性神經滋養因子」分泌，這被科學人譽為大腦的「神經肥料」，能強化記憶連結。
 2. 鳶尾素 (Irisin)：肌肉運動時會分泌這種激素，它能跨越大腦屏障，保護神經元免受老化損害。
-3. 海馬迴增生：有氧運動能直接增加大腦海馬迴的血流量，這是大腦中負責長期記憶與空間導航的核心。
+3. 海馬迴增生：有氧運動能增加大腦海馬迴的血流量，這是大腦中負責長期記憶與空間導航的核心。
 4. 前額葉皮質：規律跑步能活化負責決策與專注的「前額葉」，讓學生在處理複雜物理題時邏輯更清晰。
 5. 神經遞質平衡：運動能調節麩胺酸與 GABA 的平衡，這就像幫大腦「重新開機」，能有效緩解考前焦慮。
 6. 線粒體動力：運動會增加神經細胞內的線粒體密度，提供大腦在高強度思考時所需的 ATP 能量。
@@ -187,6 +184,7 @@ pdf_path = os.path.join("data", filename)
 
 # --- 主畫面邏輯 ---
 if not st.session_state.class_started:
+    # 📸 曉臻封面圖讀取邏輯
     cover_image_path = None
     for ext in [".jpg", ".png", ".jpeg", ".JPG", ".PNG"]:
         temp_path = os.path.join("data", f"cover{ext}")
@@ -202,7 +200,7 @@ if not st.session_state.class_started:
     st.divider()
     if st.button(f"🏃‍♀️ 開始馬拉松課程", type="primary", use_container_width=True):
         if user_key and os.path.exists(pdf_path):
-            with st.spinner("曉臻正在超音速備課中..."):
+            with st.spinner("曉臻正在翻閱講義..."):
                 try:
                     doc = fitz.open(pdf_path)
                     images_to_process, display_images_list = [], []
@@ -214,7 +212,7 @@ if not st.session_state.class_started:
                         display_images_list.append((p + 1, img))
                     
                     genai.configure(api_key=user_key)
-                    MODEL = genai.GenerativeModel('models/gemini-2.5-flash')
+                    MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
                     res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
                     
                     st.session_state.res_text = res.text
@@ -229,17 +227,21 @@ if not st.session_state.class_started:
         else:
             st.error(f"📂 找不到講義文件：{filename}")
 else:
+    # 狀態 B: 上課中
     st.success("🔔 曉臻老師正在上課中！")
-    if "audio_html" in st.session_state: 
-        st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
+    if "audio_html" in st.session_state: st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
     st.divider()
 
-    # 🔵 這幾行必須縮進在 else 裡面
-    parts = [p.strip() for p in st.session_state.res_text.split("---PAGE_SEP---") if p.strip()]
+    parts = st.session_state.get("res_text", "").split("---PAGE_SEP---")
+    if len(parts) > 0:
+        with st.chat_message("曉臻"): st.markdown(clean_for_eye(parts[0]))
 
     for i, (p_num, img) in enumerate(st.session_state.display_images):
         st.image(img, caption=f"🏁 第 {p_num} 頁講義", use_container_width=True)
-        # 🔵 確保索引 i 準確對準 parts 列表
-        if i < len(parts):
-            st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b><br>{clean_for_eye(parts[i])}</div>', unsafe_allow_html=True)
+        if (i + 1) < len(parts):
+            st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b><br>{clean_for_eye(parts[i+1])}</div>', unsafe_allow_html=True)
         st.divider()
+
+    if st.button("🏁 下課休息 (回到首頁)"):
+        st.session_state.class_started = False
+        st.rerun()
