@@ -87,11 +87,10 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
-# --- 💡 視覺洗淨函式 ---
+# --- 💡 視覺洗淨函式 (修正版：保留化學式慢速標記) ---
 def clean_for_eye(text):
-    t = text.replace("---PAGE_SEP---", "")
-    t = re.sub(r'([a-zA-Z0-9])～～\s*', r'\1', t) 
-    t = t.replace("～～", "")
+    # 僅移除分頁標籤與隱形字元，保留「～～」以符合轉譯規範
+    t = text.replace('\u00a0', ' ').replace("---PAGE_SEP---", "")
     return t
 
 # --- 3. 側邊欄 (完整原封不動內容) ---
