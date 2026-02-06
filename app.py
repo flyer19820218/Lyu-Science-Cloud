@@ -88,19 +88,18 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
-# --- 💡 專家修正：回歸純淨，把渲染權還給 LaTeX ---
 def clean_for_eye(text):
-    # 1. 洗掉隱形空格與分頁標籤
+    # 1. 物理洗淨編碼與分頁標籤
     t = text.replace('\u00a0', ' ').replace("---PAGE_SEP---", "")
     
-    # 2. 🔵 核心修補：暴力拔除所有讀音標籤與標題
-    # 這樣就不會再出現 "【顯示稿】" 或是隱藏的讀音內容
+    # 2. 🔵 核心修補：暴力拔除所有讀音標籤內容，確保 LaTeX 渲染環境純淨
+    # 這是解決 $$$$ 亂碼的關鍵手術
     t = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', t, flags=re.DOTALL)
-    t = t.replace("【顯示稿】", "").replace("【隱藏讀音稿】", "")
     
-    # 3. 確保視覺乾淨：移除所有波浪號
+    # 3. 移除標籤標題與讀音用的波浪號
+    t = t.replace("【顯示稿】", "").replace("【隱藏讀音稿】", "")
     t = t.replace("～～", "")
-    return t.strip()
+    
     return t.strip()
 
 # --- 3. 側邊欄 (完整原封不動內容) ---
