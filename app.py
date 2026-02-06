@@ -70,6 +70,7 @@ async def generate_voice_base64(text):
         "75%": "百分之七十五",
         "Acetic acid": "醋酸",
         "%": "趴",
+        "75g": "七十五公克",
     }
     for word, correct in corrections.items():
         voice_text = voice_text.replace(word, correct)
@@ -124,7 +125,7 @@ st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
-# --- 修改點：確保圖片快取不會遺失 ---
+# --- 狀態初始化 ---
 if "class_started" not in st.session_state: st.session_state.class_started = False
 if "display_images" not in st.session_state: st.session_state.display_images = []
 if "res_text" not in st.session_state: st.session_state.res_text = ""
@@ -211,7 +212,7 @@ if not st.session_state.class_started:
                         display_images_list.append((p + 1, img))
                     
                     genai.configure(api_key=user_key)
-                    MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
+                    MODEL = genai.GenerativeModel('models/gemini-1.5-flash')
                     res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
                     
                     st.session_state.res_text = res.text
