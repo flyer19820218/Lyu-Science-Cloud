@@ -1,3 +1,4 @@
+
 import streamlit as st
 import google.generativeai as genai
 import os, asyncio, edge_tts, re, base64, io, random
@@ -88,18 +89,19 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
+# --- 💡 專家修正：回歸純淨，把渲染權還給 LaTeX ---
 def clean_for_eye(text):
-    # 1. 物理洗淨編碼與分頁標籤
+    # 1. 洗掉隱形空格與分頁標籤
     t = text.replace('\u00a0', ' ').replace("---PAGE_SEP---", "")
     
-    # 2. 🔵 核心修補：暴力拔除所有讀音標籤內容，確保 LaTeX 渲染環境純淨
-    # 這是解決 $$$$ 亂碼的關鍵手術
+    # 2. 🔵 核心修補：暴力拔除所有讀音標籤與標題
+    # 這樣就不會再出現 "【顯示稿】" 或是隱藏的讀音內容
     t = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', t, flags=re.DOTALL)
-    
-    # 3. 移除標籤標題與讀音用的波浪號
     t = t.replace("【顯示稿】", "").replace("【隱藏讀音稿】", "")
-    t = t.replace("～～", "")
     
+    # 3. 確保視覺乾淨：移除所有波浪號
+    t = t.replace("～～", "")
+    return t.strip()
     return t.strip()
 
 # --- 3. 側邊欄 (完整原封不動內容) ---
@@ -148,7 +150,6 @@ SYSTEM_PROMPT = """
 
 2. 【顯示稿規範 (學生看的)】：
    - ⚠️ 重要規範：「顯示稿」內容嚴禁出現任何「～～」符號，必須直接輸出純淨的 LaTeX 公式。
-   - ⚠️ 格式禁令：禁止使用 Markdown 表格語法（如 |---|），化學反應式請直接使用 LaTeX 獨立行顯示。
    - 範例：二氧化碳反應式為 $$CaCO_{3} + 2HCl \rightarrow CaCl_{2} + H_{2}O + CO_{2}$$
    - 所有導讀聲音內容，必須「百分之百」包裹在 [[VOICE_START]] 與 [[VOICE_END]] 之間。
    - 範例：藍色硫酸銅晶體 $$CuSO_{4} \cdot 5H_{2}O$$。
@@ -220,13 +221,10 @@ if not st.session_state.class_started:
         st.info("🏃‍♀️ 曉臻老師正在起跑線上熱身準備中...")
     
     st.divider()
-    
-    # 🚀 專家優化：按鈕現在在最顯眼的位置
     if st.button(f"🏃‍♀️點擊-開始今天的ai自然課程", type="primary", use_container_width=True):
         if user_key and os.path.exists(pdf_path):
             with st.spinner("曉臻正在超音速備課中..."):
                 try:
-                    # (圖片讀取邏輯)
                     doc = fitz.open(pdf_path)
                     images_to_process, display_images_list = [], []
                     pages_to_read = range(start_page - 1, min(start_page + 4, len(doc)))
@@ -236,35 +234,37 @@ if not st.session_state.class_started:
                         images_to_process.append(img)
                         display_images_list.append((p + 1, img))
                     
-                    # 🔴 核心影分身手術：生成內容並分離讀音與顯示
                     genai.configure(api_key=user_key)
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
+                    # --- 第 231 行開始貼上：影分身拆分手術 ---
                     res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
                     
+                    # 🔴 專家核心邏輯：物理洗淨編碼並分離顯示與讀音
                     raw_res = res.text.replace('\u00a0', ' ')
-                    
-                    # 1. 影分身：提取 [[VOICE_START]] 讀音內容 (給耳朵聽)
+
+                    # 1. 影分身：提取 [[VOICE_START]] 到 [[VOICE_END]] 之間的隱藏讀音內容
+                    # re.DOTALL 確保即便內容跨行也能完整抓取
                     voice_matches = re.findall(r'\[\[VOICE_START\]\](.*?)\[\[VOICE_END\]\]', raw_res, re.DOTALL)
                     voice_full_text = " ".join(voice_matches) if voice_matches else raw_res
+
+                    # 2. 產生語音 (這裡會包含結晶水、之、以及所有慢速標記)
                     st.session_state.audio_html = asyncio.run(generate_voice_base64(voice_full_text))
-                    
-                    # 2. 影分身：移除標籤，留下純 LaTeX 顯示稿 (給眼睛看)
+
+                    # 3. 顯示稿 (挖掉所有隱藏標籤，只留下乾淨的 LaTeX 內容)
+                    # 這樣就不會再出現慘不忍睹的 $$$$ 亂碼了
                     display_res = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', raw_res, flags=re.DOTALL)
                     st.session_state.res_text = display_res
                     
                     st.session_state.display_images = display_images_list
                     st.session_state.class_started = True
-                    st.rerun() # 🚀 完成後立即切換到上課畫面
+                    st.rerun()
+                    
                 except Exception as e:
                     st.error(f"❌ 發生錯誤：{e}")
         elif not user_key:
             st.warning("🔑 請先輸入實驗室啟動金鑰。")
         else:
             st.error(f"📂 找不到講義文件：{filename}")
-
-    # 📚 這裡接著放原本的導航系統 (冊別、章節選擇器)
-    st.divider()
-
 else:
     # 狀態 B: 上課中
     st.success("🔔 曉臻老師正在上課中！")
