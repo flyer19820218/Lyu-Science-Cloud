@@ -15,7 +15,7 @@ st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initi
 
 st.markdown("""
     <style>
-    /* 1. 全局視覺鎖定 (白底黑字) & iOS 補丁 */
+    /* 1. 全局視覺鎖定 (白底黑字) */
     :root { color-scheme: light !important; }
     .stApp, [data-testid="stAppViewContainer"], .stMain, [data-testid="stHeader"] { 
         background-color: #ffffff !important; 
@@ -94,7 +94,7 @@ def clean_for_eye(text):
     t = t.replace("～～", "")
     return t
 
-# --- 3. 側邊欄 ---
+# --- 3. 側邊欄 (完整原封不動內容) ---
 st.sidebar.title("門 打開實驗室大門-金鑰")
 
 st.sidebar.markdown("""
@@ -124,11 +124,12 @@ st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
+# --- 修改點：確保圖片快取不會遺失 ---
 if "class_started" not in st.session_state: st.session_state.class_started = False
 if "display_images" not in st.session_state: st.session_state.display_images = []
 if "res_text" not in st.session_state: st.session_state.res_text = ""
-
-# --- 4. 曉臻教學核心指令 ---
+   
+# --- 4. 曉臻教學核心指令 (防幻覺加強版) ---
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
 你現在要導讀連續 5 頁講義。請遵守規範：
@@ -159,7 +160,7 @@ SYSTEM_PROMPT = """
 
 6. 【結尾】：必喊『這就是自然科學 the 真理！』。
 
-# --- 曉臻科學小知識庫 ---
+# --- 曉臻科學小知識庫 (來源：科學人與大腦科學研究) ---
 1. BDNF：運動能促進「腦源性神經滋養因子」分泌，這被科學人譽為大腦的「神經肥料」，能強化記憶連結。
 2. 鳶尾素 (Irisin)：肌肉運動時會分泌這種激素，它能跨越大腦屏障，保護神經元免受老化損害。
 3. 海馬迴增生：有氧運動能直接增加大腦海馬迴的血流量，這是大腦中負責長期記憶與空間導航的核心。
@@ -169,7 +170,7 @@ SYSTEM_PROMPT = """
 7. 突觸塑性：身體活動會增加神經元突觸的密度，讓大腦的「迴路」更寬闊，學習新知識的速度更快。
 8. 內啡肽 (Endorphins)：這就是「跑者愉悅」的來源，能提升大腦對學習壓力的耐受度，讓人心情變好。
 9. 晝夜節律：白天的適度運動能調節褪黑激素分泌，改善睡眠品質，而充足的睡眠是記憶固化的關鍵。
-10. 鏡像神經元：集體運動（如接力賽）能活化鏡像神經元，提升學生的社交理解與團隊合作能力。
+10. 鏡像神經元：集體運動（如接力賽）能活化鏡像神經元，提升學生的社交理解 with 團隊合作能力。
 """
 
 # --- 5. 導航系統 ---
