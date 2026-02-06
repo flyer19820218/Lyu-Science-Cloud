@@ -88,10 +88,18 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
-# --- 💡 視覺洗淨函式 (修正版：保留化學式慢速標記) ---
+# --- 💡 專家修正：解決單獨化學式無法渲染問題 ---
 def clean_for_eye(text):
-    # 僅洗掉分頁標籤與隱形空格，完全保留 LaTeX 渲染符號 ($) 與聲音標記 (～～)
+    # 1. 物理洗淨編碼與標籤
     t = text.replace('\u00a0', ' ').replace("---PAGE_SEP---", "")
+    
+    # 2. 🔵 核心修復：把單獨出現的聲音標記自動轉換回 LaTeX 格式
+    # 邏輯：偵測類似 C～～ O～～ two～～ 並在其前後加上 $$ 確保單獨一行也能渲染
+    # 我們利用正則表達式，尋找那些被括號包住或單獨存在的聲音標記
+    t = re.sub(r'([A-Z][a-z]?～～\s*(?:[a-z0-9]+～～\s*)*)', r'$$\1$$', t)
+    
+    # 3. 移除多餘的波浪號，讓文字稿畫面乾淨 (但語音引擎那邊會保留，不用擔心)
+    t = t.replace("～～", "")
     return t
 
 # --- 3. 側邊欄 (完整原封不動內容) ---
