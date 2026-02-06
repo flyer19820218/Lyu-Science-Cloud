@@ -1,4 +1,3 @@
-
 import streamlit as st
 import google.generativeai as genai
 import os, asyncio, edge_tts, re, base64, io, random
@@ -197,26 +196,39 @@ SYSTEM_PROMPT = """
 10. 鏡像神經元：集體運動（如接力賽）能活化鏡像神經元，提升學生的社交理解與團隊合作能力。
 """
 
-# --- 5. 變數預讀 (確保按鈕能抓到正確檔案) ---
-# 我們先定義變數，但不立即顯示 UI，這樣按鈕才不會找不到路徑
-if "vol_select" not in st.session_state: st.session_state.vol_s = "第四冊"
-if "chap_select" not in st.session_state: st.session_state.chap_s = "第三章"
-if "start_pg" not in st.session_state: st.session_state.start_p = 1
+# --- 5. 導航系統 ---
+col1, col2, col3 = st.columns([1, 1, 1])
+with col1: vol_select = st.selectbox("📚 冊別選擇", ["第一冊", "第二冊", "第三冊", "第四冊", "第五冊", "第六冊"], index=3)
+with col2: chap_select = st.selectbox("🧪 章節選擇", ["第一章", "第二章", "第三章", "第四章", "第五章", "第六章"], index=2)
+with col3: start_page = st.number_input("🏁 起始頁碼", 1, 100, 1, key="start_pg")
 
-# --- 主畫面邏輯 (順序：標題 > 按鈕 > 選書 > 圖示) ---
+filename = f"{vol_select}_{chap_select}.pdf"
+pdf_path = os.path.join("data", filename)
+
+# --- 主畫面邏輯 ---
 if not st.session_state.class_started:
-    # 1. 🚀 開始按鈕 (主動作：放在最上方)
+    # 📸 曉臻封面圖讀取邏輯
+    cover_image_path = None
+    for ext in [".jpg", ".png", ".jpeg", ".JPG", ".PNG"]:
+        temp_path = os.path.join("data", f"cover{ext}")
+        if os.path.exists(temp_path):
+            cover_image_path = temp_path
+            break
+            
+    if cover_image_path:
+        st.image(Image.open(cover_image_path), use_container_width=True)
+    else:
+        st.info("🏃‍♀️ 曉臻老師正在起跑線上熱身準備中...")
+    
     st.divider()
     
-    # 使用目前的 pdf_path 進行備課
-    current_filename = f"{vol_select}_{chap_select}.pdf"
-    current_pdf_path = os.path.join("data", current_filename)
-
+    # 🚀 專家優化：按鈕現在在最顯眼的位置
     if st.button(f"🏃‍♀️點擊-開始今天的ai自然課程", type="primary", use_container_width=True):
-        if user_key and os.path.exists(current_pdf_path):
+        if user_key and os.path.exists(pdf_path):
             with st.spinner("曉臻正在超音速備課中..."):
                 try:
-                    doc = fitz.open(current_pdf_path)
+                    # (圖片讀取邏輯)
+                    doc = fitz.open(pdf_path)
                     images_to_process, display_images_list = [], []
                     pages_to_read = range(start_page - 1, min(start_page + 4, len(doc)))
                     for p in pages_to_read:
@@ -225,64 +237,56 @@ if not st.session_state.class_started:
                         images_to_process.append(img)
                         display_images_list.append((p + 1, img))
                     
+                    # 🔴 核心影分身手術：生成內容並分離讀音與顯示
                     genai.configure(api_key=user_key)
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
                     res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
                     
                     raw_res = res.text.replace('\u00a0', ' ')
                     
-                    # 🔴 影分身手術：分離讀音與顯示稿 (解決亂碼關鍵)
+                    # 1. 影分身：提取 [[VOICE_START]] 讀音內容 (給耳朵聽)
                     voice_matches = re.findall(r'\[\[VOICE_START\]\](.*?)\[\[VOICE_END\]\]', raw_res, re.DOTALL)
                     voice_full_text = " ".join(voice_matches) if voice_matches else raw_res
                     st.session_state.audio_html = asyncio.run(generate_voice_base64(voice_full_text))
                     
+                    # 2. 影分身：移除標籤，留下純 LaTeX 顯示稿 (給眼睛看)
                     display_res = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', raw_res, flags=re.DOTALL)
-                    st.session_state.res_text = display_res # 這裡存入文字稿
+                    st.session_state.res_text = display_res
                     
                     st.session_state.display_images = display_images_list
                     st.session_state.class_started = True
-                    st.rerun() 
+                    st.rerun() # 🚀 完成後立即切換到上課畫面
                 except Exception as e:
                     st.error(f"❌ 發生錯誤：{e}")
         elif not user_key:
             st.warning("🔑 請先輸入實驗室啟動金鑰。")
         else:
-            st.error(f"📂 找不到講義文件：{current_filename}")
+            st.error(f"📂 找不到講義文件：{filename}")
 
+    # 📚 這裡接著放原本的導航系統 (冊別、章節選擇器)
     st.divider()
-
-    # 2. 📚 選書系統 (放在按鈕下方)
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col1: vol_select = st.selectbox("📚 冊別選擇", ["第一冊", "第二冊", "第三冊", "第四冊", "第五冊", "第六冊"], index=3)
-    with col2: chap_select = st.selectbox("🧪 章節選擇", ["第一章", "第二章", "第三章", "第四章", "第五章", "第六章"], index=2)
-    with col3: start_page = st.number_input("🏁 起始頁碼", 1, 100, 1, key="start_pg")
-
-    st.divider()
-
-    # 3. 📸 曉臻上課圖示 (最下方)
-    cover_image_path = None
-    for ext in [".jpg", ".png", ".jpeg", ".JPG", ".PNG"]:
-        temp_path = os.path.join("data", f"cover{ext}")
-        if os.path.exists(temp_path): cover_image_path = temp_path; break
-    if cover_image_path:
-        st.image(Image.open(cover_image_path), use_container_width=True)
 
 else:
-    # 狀態 B: 上課中 (文字稿顯示區)
+    # 狀態 B: 上課中
     st.success("🔔 曉臻老師正在上課中！")
-    if "audio_html" in st.session_state: 
-        st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
+    if "audio_html" in st.session_state: st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
     st.divider()
 
+    # 🔵 專家修正處：先洗掉隱形空格，再精確切割
     raw_text = st.session_state.get("res_text", "").replace('\u00a0', ' ')
     parts = [p.strip() for p in raw_text.split("---PAGE_SEP---") if p.strip()] 
 
+    # 顯示開場白 (第一段文字)
     if len(parts) > 0:
         with st.chat_message("曉臻"): 
             st.markdown(clean_for_eye(parts[0]))
 
+    # 顯示圖片與對應的文字稿
     for i, (p_num, img) in enumerate(st.session_state.display_images):
         st.image(img, caption=f"🏁 第 {p_num} 頁講義", use_container_width=True)
+        
+        # 🔵 專家修正處：確保索引 i 準確對準 parts 內容，解決 2、4 頁消失問題
+        # 注意：因為第一段是開場白，所以後續文字稿要從 parts[i+1] 開始對應
         if (i + 1) < len(parts):
             st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b><br>{clean_for_eye(parts[i+1])}</div>', unsafe_allow_html=True)
         st.divider()
