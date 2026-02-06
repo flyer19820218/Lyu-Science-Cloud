@@ -95,7 +95,7 @@ def clean_for_eye(text):
     return t
 
 # --- 3. 側邊欄 (完整原封不動內容) ---
-st.sidebar.title("門 打開實驗室大門-金鑰")
+st.sidebar.title("🚪 打開實驗室大門-金鑰")
 
 st.sidebar.markdown("""
 <div class="info-box">
