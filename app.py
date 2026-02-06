@@ -170,7 +170,7 @@ SYSTEM_PROMPT = """
 7. 突觸塑性：身體活動會增加神經元突觸的密度，讓大腦的「迴路」更寬闊，學習新知識的速度更快。
 8. 內啡肽 (Endorphins)：這就是「跑者愉悅」的來源，能提升大腦對學習壓力的耐受度，讓人心情變好。
 9. 晝夜節律：白天的適度運動能調節褪黑激素分泌，改善睡眠品質，而充足的睡眠是記憶固化的關鍵。
-10. 鏡像神經元：集體運動（如接力賽）能活化鏡像神經元，提升學生的社交理解 with 團隊合作能力。
+10. 鏡像神經元：集體運動（如接力賽）能活化鏡像神經元，提升學生的社交理解與團隊合作能力。
 """
 
 # --- 5. 導航系統 ---
@@ -221,6 +221,10 @@ if not st.session_state.class_started:
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ 發生錯誤：{e}")
+        elif not user_key:
+            st.warning("🔑 請先輸入實驗室啟動金鑰。")
+        else:
+            st.error(f"📂 找不到講義文件：{filename}")
 else:
     st.success("🔔 曉臻老師正在上課中！")
     if "audio_html" in st.session_state: st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
