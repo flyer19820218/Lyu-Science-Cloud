@@ -61,8 +61,13 @@ st.divider()
 
 # --- 2. 曉臻語音引擎 (暴力音正 + 雜音過濾) ---
 async def generate_voice_base64(text):
-    # 【關鍵】徹底抹除分頁標籤，防止唸出奇怪雜音
-    voice_text = text.replace("---PAGE_SEP---", " ")
+    # 【藍色標色區：暴力洗淨所有隱形字元】
+    voice_text = text.replace('\u00a0', ' ').replace("---PAGE_SEP---", " ")
+    
+    # 【藍色標色區：修正讀音邏輯，解決截圖中 dash 與連字號問題】
+    # 邏輯：將 3-1 轉為 3之1，將 圖一-dash-一 轉為 圖一之一
+    voice_text = re.sub(r'(\d+)-(\d+)', r'\1之\2', voice_text)
+    voice_text = voice_text.replace("-dash-", "之")
     
     corrections = {
         "補給": "補己",
@@ -74,9 +79,6 @@ async def generate_voice_base64(text):
     }
     for word, correct in corrections.items():
         voice_text = voice_text.replace(word, correct)
-    
-    # 章節自動修正 (例如 3-1 -> 3之1)
-    voice_text = re.sub(r'(\d+)-(\d+)', r'\1之\2', voice_text)
     
     clean_text = voice_text.replace("$", "")
     clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', clean_text)
@@ -141,7 +143,7 @@ SYSTEM_PROMPT = """
    - 格式：『根據科學研究...』或『在《科學人》相關報導中提到...』。
    - 結尾必含：『熱身一下下課老師就要去跑步了』。
 
-2. 【翻頁】：解說完當頁內容才唸『翻到第 X 頁』。每頁解說最開頭加上標籤『---PAGE_SEP---』。
+2. 【翻頁】：一開始要說明翻到第幾頁，解說完當頁內容才唸『翻到第 X 頁』。可以跟學生說喝口水，停頓2秒後，繼續上課。
 
 3. 【偵測】：僅當圖片明確出現「練習」二字才啟動題目模式。講義中的「底線」是重點提醒，嚴禁誤判為題目。
 
@@ -228,19 +230,16 @@ if not st.session_state.class_started:
             st.error(f"📂 找不到講義文件：{filename}")
 else:
     st.success("🔔 曉臻老師正在上課中！")
-    if "audio_html" in st.session_state: st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
+    if "audio_html" in st.session_state: 
+        st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
     st.divider()
 
-    parts = st.session_state.get("res_text", "").split("---PAGE_SEP---")
-    if len(parts) > 0:
-        with st.chat_message("曉臻"): st.markdown(clean_for_eye(parts[0]))
+    # 🔵 這幾行必須縮進在 else 裡面
+    parts = [p.strip() for p in st.session_state.res_text.split("---PAGE_SEP---") if p.strip()]
 
     for i, (p_num, img) in enumerate(st.session_state.display_images):
         st.image(img, caption=f"🏁 第 {p_num} 頁講義", use_container_width=True)
-        if (i + 1) < len(parts):
-            st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b><br>{clean_for_eye(parts[i+1])}</div>', unsafe_allow_html=True)
+        # 🔵 確保索引 i 準確對準 parts 列表
+        if i < len(parts):
+            st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b><br>{clean_for_eye(parts[i])}</div>', unsafe_allow_html=True)
         st.divider()
-
-    if st.button("🏁 下課休息 (回到首頁)"):
-        st.session_state.class_started = False
-        st.rerun()
