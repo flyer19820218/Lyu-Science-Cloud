@@ -5,7 +5,7 @@ from PIL import Image
 
 # --- 零件檢查 ---
 try:
-    import fitz # pymupdf
+import fitz # pymupdf
 except ImportError:
     st.error("❌ 零件缺失！請確保安裝了 pymupdf。")
     st.stop()
@@ -123,6 +123,10 @@ st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", key="science_q")
 uploaded_file = st.sidebar.file_uploader("📸 照片區：", type=["jpg", "png", "jpeg"], key="science_f")
 
+# --- 修改點：確保圖片快取不會遺失 ---
+if "class_started" not in st.session_state: st.session_state.class_started = False
+if "display_images" not in st.session_state: st.session_state.display_images = []
+   
 # --- 4. 曉臻教學核心指令 (防幻覺加強版) ---
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
