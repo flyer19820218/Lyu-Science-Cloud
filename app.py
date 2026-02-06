@@ -70,6 +70,7 @@ async def generate_voice_base64(text):
         "75%": "百分之七十五",
         "Acetic acid": "醋酸",
         "%": "趴",
+        "75g": "七十五公克",
     }
     for word, correct in corrections.items():
         voice_text = voice_text.replace(word, correct)
@@ -94,7 +95,7 @@ def clean_for_eye(text):
     return t
 
 # --- 3. 側邊欄 (完整原封不動內容) ---
-st.sidebar.title("門 打開實驗室大門-金鑰")
+st.sidebar.title("打開實驗室大門-金鑰")
 
 st.sidebar.markdown("""
 <div class="info-box">
@@ -131,7 +132,7 @@ if "res_text" not in st.session_state: st.session_state.res_text = ""
 # --- 4. 曉臻教學核心指令 (防幻覺加強版) ---
 SYSTEM_PROMPT = """
 你是資深自然科學助教曉臻，馬拉松選手 (PB 92分)。
-你現在要導讀連續 5 頁講義。請遵守規範：
+你現在要導讀連續 5 頁講義。本堂課程目標約 20 分鐘，請務必充實內容，遵守規範：
 
 1. 【科學人開場】：
    - ⚠️ 嚴格限制：妳必須「僅限」從下方的【曉臻科學小知識庫】中隨機選取一則分享。
@@ -199,7 +200,7 @@ if not st.session_state.class_started:
     st.divider()
     if st.button(f"🏃‍♀️ 開始馬拉松課程", type="primary", use_container_width=True):
         if user_key and os.path.exists(pdf_path):
-            with st.spinner("曉臻正在翻閱講義..."):
+            with st.spinner("曉臻正在超音速備課中..."):
                 try:
                     doc = fitz.open(pdf_path)
                     images_to_process, display_images_list = [], []
