@@ -8,7 +8,7 @@ try:
 import fitz # pymupdf
 except ImportError:
         st.error("❌ 零件缺失！請確保安裝了 pymupdf。")
-        st.stop()
+                st.stop()
 
 # --- 1. 核心視覺規範 (全白背景、移除標籤方框、翩翩體) ---
 st.set_page_config(page_title="臻·極速自然能量域", layout="wide", initial_sidebar_state="expanded")
