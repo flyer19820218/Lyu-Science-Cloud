@@ -89,7 +89,7 @@ async def generate_voice_base64(text):
 
 # --- 💡 視覺洗淨函式 (修正版：保留化學式慢速標記) ---
 def clean_for_eye(text):
-    # 僅移除分頁標籤與隱形字元，保留「～～」以符合轉譯規範
+    # 僅洗掉分頁標籤與隱形空格，完全保留 LaTeX 渲染符號 ($) 與聲音標記 (～～)
     t = text.replace('\u00a0', ' ').replace("---PAGE_SEP---", "")
     return t
 
@@ -231,12 +231,21 @@ else:
     if "audio_html" in st.session_state: st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
     st.divider()
 
-    parts = st.session_state.get("res_text", "").split("---PAGE_SEP---")
-    if len(parts) > 0:
-        with st.chat_message("曉臻"): st.markdown(clean_for_eye(parts[0]))
+    # 🔵 專家修正處：先洗掉隱形空格，再精確切割
+    raw_text = st.session_state.get("res_text", "").replace('\u00a0', ' ')
+    parts = [p.strip() for p in raw_text.split("---PAGE_SEP---") if p.strip()] 
 
+    # 顯示開場白 (第一段文字)
+    if len(parts) > 0:
+        with st.chat_message("曉臻"): 
+            st.markdown(clean_for_eye(parts[0]))
+
+    # 顯示圖片與對應的文字稿
     for i, (p_num, img) in enumerate(st.session_state.display_images):
         st.image(img, caption=f"🏁 第 {p_num} 頁講義", use_container_width=True)
+        
+        # 🔵 專家修正處：確保索引 i 準確對準 parts 內容，解決 2、4 頁消失問題
+        # 注意：因為第一段是開場白，所以後續文字稿要從 parts[i+1] 開始對應
         if (i + 1) < len(parts):
             st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b><br>{clean_for_eye(parts[i+1])}</div>', unsafe_allow_html=True)
         st.divider()
