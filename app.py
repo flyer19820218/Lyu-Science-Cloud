@@ -203,19 +203,18 @@ SYSTEM_PROMPT = r"""
 10. 鏡像神經元：集體運動（如接力賽）能活化鏡像神經元，提升學生的社交理解與團隊合作能力。
 """
 
-# --- 5. 導航系統 (先定義，確保按鈕抓得到變數) ---
+# --- 5. 導航系統 (先定義變數，確保按鈕抓得到) ---
 col1, col2, col3 = st.columns([1, 1, 1])
 with col1: vol_select = st.selectbox("📚 冊別選擇", ["第一冊", "第二冊", "第三冊", "第四冊", "第五冊", "第六冊"], index=3)
 with col2: chap_select = st.selectbox("🧪 章節選擇", ["第一章", "第二章", "第三章", "第四章", "第五章", "第六章"], index=2)
 with col3: start_page = st.number_input("🏁 起始頁碼", 1, 100, 1, key="start_pg")
 
-# 這裡先定義好路徑，解決 NameError
 filename = f"{vol_select}_{chap_select}.pdf"
 pdf_path = os.path.join("data", filename)
 
 # --- 主畫面邏輯 ---
 if not st.session_state.class_started:
-    # 🚀 1. 開始按鈕 (置頂)
+    # 🚀 1. 開始按鈕 (主動作置頂)
     st.divider()
     if st.button(f"🏃‍♀️點擊-開始今天的ai自然課程", type="primary", use_container_width=True):
         if user_key and os.path.exists(pdf_path):
@@ -233,13 +232,11 @@ if not st.session_state.class_started:
                     genai.configure(api_key=user_key)
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
                     
-                    # 生成內容：這裡才定義 res 變數
+                    # 生成內容：解決 res is not defined 錯誤
                     res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
-                    
-                    # 🔴 影分身核心邏輯：修復 unicode 錯誤與縮進
                     raw_res = res.text.replace('\u00a0', ' ')
                     
-                    # 1. 提取語音 (給耳朵聽)
+                    # 🔴 影分身核心邏輯：修復縮進與語音抓取
                     voice_matches = re.findall(r'\[\[VOICE_START\]\](.*?)\[\[VOICE_END\]\]', raw_res, re.DOTALL)
                     if voice_matches:
                         voice_full_text = " ".join(voice_matches)
@@ -248,7 +245,7 @@ if not st.session_state.class_started:
                     
                     st.session_state.audio_html = asyncio.run(generate_voice_base64(voice_full_text))
                     
-                    # 2. 提取顯示稿 (給眼睛看，解決文字消失與亂碼)
+                    # 提取顯示稿：解決 $$$$ 亂碼
                     display_res = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', raw_res, flags=re.DOTALL)
                     st.session_state.res_text = display_res 
                     
@@ -264,7 +261,7 @@ if not st.session_state.class_started:
 
     st.divider()
 
-    # 📸 2. 曉臻封面圖 (置底)
+    # 📸 2. 曉臻封面圖 (置底，修復圖片讀取錯誤)
     cover_image_path = None
     for ext in [".jpg", ".png", ".jpeg", ".JPG", ".PNG"]:
         temp_path = os.path.join("data", f"cover{ext}")
@@ -273,9 +270,12 @@ if not st.session_state.class_started:
             break
             
     if cover_image_path:
-        st.image(Image.open(cover_image_path), use_container_width=True)
+        try:
+            st.image(Image.open(cover_image_path), use_container_width=True)
+        except Exception:
+            st.info("🏃‍♀️ 曉臻老師正在操場跑步熱身中...")
     else:
-        st.info("🏃‍♀️ 曉臻老師正在起跑線上熱身準備中...")
+        st.info("🏃‍♀️ 曉臻老師正在起跑線上準備中...")
 
 else:
     # 狀態 B: 上課中顯示
@@ -294,7 +294,7 @@ else:
     for i, (p_num, img) in enumerate(st.session_state.display_images):
         st.image(img, caption=f"🏁 第 {p_num} 頁講義", use_container_width=True)
         if (i + 1) < len(parts):
-            # 文字本體拆出 HTML 標籤外，保護 LaTeX 渲染
+            # 文字本體拆出 HTML 外，保護 LaTeX 渲染
             with st.container():
                 st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b></div>', unsafe_allow_html=True)
                 st.markdown(clean_for_eye(parts[i+1]))
@@ -302,9 +302,4 @@ else:
 
     if st.button("🏁 下課休息 (回到首頁)"):
         st.session_state.class_started = False
-        st.rerun()
-    
-    
-
-
         st.rerun()
