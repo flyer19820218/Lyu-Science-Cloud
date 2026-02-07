@@ -89,19 +89,21 @@ async def generate_voice_base64(text):
     b64 = base64.b64encode(audio_data).decode()
     return f'<audio controls autoplay style="width:100%"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
 
-# --- 💡 專家修正：回歸純淨，把渲染權還給 LaTeX ---
+# --- 💡 專家修正：解決文字稿消失與公式渲染問題 ---
 def clean_for_eye(text):
-    # 1. 洗掉隱形空格與分頁標籤
+    # 1. 物理洗淨編碼與分頁標籤
     t = text.replace('\u00a0', ' ').replace("---PAGE_SEP---", "")
     
-    # 2. 🔵 核心修補：暴力拔除所有讀音標籤與標題
-    # 這樣就不會再出現 "【顯示稿】" 或是隱藏的讀音內容
+    # 2. 🔵 核心關鍵：只挖掉 [[VOICE_START]]...[[VOICE_END]] 標籤內容
+    # 使用 re.DOTALL 確保跨行內容也能被精確挖除，不留殘影
     t = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', t, flags=re.DOTALL)
+    
+    # 3. 移除標題提示 (AI 有時會自動噴出這些標題，我們把它洗掉)
     t = t.replace("【顯示稿】", "").replace("【隱藏讀音稿】", "")
     
-    # 3. 確保視覺乾淨：移除所有波浪號
+    # 4. 移除讀音用的波浪號，但絕對不要動到 $ 符號
     t = t.replace("～～", "")
-    return t.strip()
+    
     return t.strip()
 
 # --- 3. 側邊欄 (完整原封不動內容) ---
@@ -149,10 +151,11 @@ SYSTEM_PROMPT = """
    - 每一頁內容解說完畢後，必須進行該頁的「知識點總結」與「常見考點提醒」。
 
 2. 【顯示稿規範 (學生看的)】：
-   - ⚠️ 重要規範：「顯示稿」內容嚴禁出現任何「～～」符號，必須直接輸出純淨的 LaTeX 公式。
-   - 範例：二氧化碳反應式為 $$CaCO_{3} + 2HCl \rightarrow CaCl_{2} + H_{2}O + CO_{2}$$
    - 所有導讀聲音內容，必須「百分之百」包裹在 [[VOICE_START]] 與 [[VOICE_END]] 之間。
    - 範例：藍色硫酸銅晶體 $$CuSO_{4} \cdot 5H_{2}O$$。
+   - ⚠️ 嚴禁出現「～～」。化學式必須使用標準 LaTeX。
+   - ⚠️ 反應式範例 (電解水)：$$2H_{2}O \xrightarrow{電解} 2H_{2} + O_{2}$$
+   - ⚠️ 電離反應範例 (硫酸)：$$H_{2}SO_{4} \rightarrow 2H^{+} + SO_{4}^{2-}$$
 
 3. 【隱藏讀音稿規範 (曉臻唸的)】：
    - ⚠️ 必須包裹在 [[VOICE_START]] 與 [[VOICE_END]] 之間。
