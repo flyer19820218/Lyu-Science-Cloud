@@ -21,21 +21,14 @@ st.markdown("""
         background-color: #ffffff !important; 
     }
     
-    /* 2. 🚨 翩翩體強勢鎖定：涵蓋所有顯示文字、按鈕與標籤 */
-    html, body, .stMarkdown, p, label, li, h1, h2, h3, .stButton button, a, div, span {
-        color: #000000 !important;
-        font-family: 'HanziPen SC', '翩翩體', 'Comic Sans MS', cursive, sans-serif !important;
-    }
+    /* 2. 空間與邊距調整 */
+    div.block-container { padding-top: 1rem !important; padding-bottom: 2rem !important; }
+    section[data-testid="stSidebar"] > div { padding-top: 1rem !important; }
+    [data-testid="stSidebar"] { min-width: 320px !important; max-width: 320px !important; }
+    header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1 !important; }
+    button[data-testid="stSidebarCollapseButton"] { color: #000000 !important; display: block !important; }
 
-    /* 3. 按鈕視覺優化 */
-    .stButton button {
-        border: 2px solid #000000 !important;
-        background-color: #ffffff !important;
-        font-weight: bold !important;
-        font-family: 'HanziPen SC', '翩翩體' !important;
-    }
-
-    /* 4. 暴力拔除所有預設標籤方框 (保護潔淨排版) */
+    /* 3. 🚨 暴力拔除標籤方框 (起始頁碼、冊別等標籤) */
     [data-testid="stWidgetLabel"] div, [data-testid="stWidgetLabel"] p {
         background-color: transparent !important;
         border: none !important;
@@ -43,15 +36,22 @@ st.markdown("""
         padding: 0 !important;
     }
 
-    /* 5. 逐字稿區塊 */
-    .transcript-box { 
-        background-color: #fdfdfd; 
-        border-left: 5px solid #000; 
-        padding: 15px; 
-        margin-bottom: 25px; 
-        line-height: 1.6;
-        font-family: 'HanziPen SC', '翩翩體' !important;
+    /* 4. 字體規範：全黑翩翩體 */
+    html, body, .stMarkdown, p, label, li, h1, h2, h3, .stButton button, a {
+        color: #000000 !important;
+        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
     }
+
+    .stButton button {
+        border: 2px solid #000000 !important;
+        background-color: #ffffff !important;
+        font-weight: bold !important;
+    }
+
+    /* 5. 區塊樣式 */
+    .info-box { border: 1px solid #ddd; padding: 1rem; border-radius: 8px; background-color: #f9f9f9; font-size: 0.9rem; color: #000; }
+    .guide-box { border: 2px dashed #01579b; padding: 1rem; border-radius: 12px; background-color: #f0f8ff; color: #000; }
+    .transcript-box { background-color: #fdfdfd; border-left: 5px solid #000; padding: 15px; margin-bottom: 25px; line-height: 1.6; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -117,6 +117,7 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+user_key = st.sidebar.text_input("🔑 實驗室啟動金鑰", type="password", key="tower_key")
 st.sidebar.divider()
 st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", key="science_q")
@@ -190,15 +191,7 @@ SYSTEM_PROMPT = r"""
 10. 鏡像神經元：集體運動（如接力賽）能活化鏡像神經元，提升學生的社交理解與團隊合作能力。
 """
 
-# --- 4. 側邊欄與變數初始化 ---
-st.sidebar.title("打開實驗室大門-金鑰")
-user_key = st.sidebar.text_input("🔑 實驗室啟動金鑰", type="password", key="tower_key")
-
-if "class_started" not in st.session_state: st.session_state.class_started = False
-if "display_images" not in st.session_state: st.session_state.display_images = []
-if "res_text" not in st.session_state: st.session_state.res_text = ""
-
-# --- 5. 導航系統 (全盤考慮：變數先定義，按鈕才抓得到) ---
+# --- 5. 導航系統 (先定義變數，確保按鈕抓得到) ---
 col1, col2, col3 = st.columns([1, 1, 1])
 with col1: vol_select = st.selectbox("📚 冊別選擇", ["第一冊", "第二冊", "第三冊", "第四冊", "第五冊", "第六冊"], index=3)
 with col2: chap_select = st.selectbox("🧪 章節選擇", ["第一章", "第二章", "第三章", "第四章", "第五章", "第六章"], index=2)
@@ -207,18 +200,13 @@ with col3: start_page = st.number_input("🏁 起始頁碼", 1, 100, 1, key="sta
 filename = f"{vol_select}_{chap_select}.pdf"
 pdf_path = os.path.join("data", filename)
 
-# --- 6. 主邏輯區 ---
+# --- 主畫面邏輯 ---
 if not st.session_state.class_started:
+    # 🚀 1. 開始按鈕 (主動作置頂)
     st.divider()
-    # 📸 封面圖置頂
-    cover_image_path = os.path.join("data", "cover.jpg") # 請確保檔案存在
-    if os.path.exists(cover_image_path):
-        st.image(Image.open(cover_image_path), use_container_width=True)
-    
-    # 🚀 開始按鈕
-    if st.button("🏃‍♀️點擊-開始今天的ai自然課程", type="primary", use_container_width=True):
+    if st.button(f"🏃‍♀️點擊-開始今天的ai自然課程", type="primary", use_container_width=True):
         if user_key and os.path.exists(pdf_path):
-            with st.spinner("曉臻正在備課中..."):
+            with st.spinner("曉臻正在超音速備課中..."):
                 try:
                     doc = fitz.open(pdf_path)
                     images_to_process, display_images_list = [], []
@@ -231,44 +219,75 @@ if not st.session_state.class_started:
                     
                     genai.configure(api_key=user_key)
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
-                    res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
                     
+                    # 生成內容：解決 res is not defined 錯誤
+                    res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
                     raw_res = res.text.replace('\u00a0', ' ')
                     
-                    # 🔴 核心分身邏輯：聲文共存
+                    # 🔴 影分身核心邏輯：修復縮進與語音抓取
                     voice_matches = re.findall(r'\[\[VOICE_START\]\](.*?)\[\[VOICE_END\]\]', raw_res, re.DOTALL)
-                    voice_full_text = " ".join(voice_matches) if voice_matches else raw_res
+                    if voice_matches:
+                        voice_full_text = " ".join(voice_matches)
+                    else:
+                        voice_full_text = raw_res.replace('[[VOICE_START]]', '').replace('[[VOICE_END]]', '')
+                    
                     st.session_state.audio_html = asyncio.run(generate_voice_base64(voice_full_text))
                     
-                    if "[[VOICE_START]]" in raw_res:
-                        st.session_state.res_text = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', raw_res, flags=re.DOTALL)
-                    else:
-                        st.session_state.res_text = raw_res
+                    # 提取顯示稿：解決 $$$$ 亂碼
+                    display_res = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', raw_res, flags=re.DOTALL)
+                    st.session_state.res_text = display_res 
                     
                     st.session_state.display_images = display_images_list
                     st.session_state.class_started = True
-                    st.rerun()
-                except Exception as e: st.error(f"❌ 錯誤：{e}")
-        elif not user_key: st.warning("🔑 請輸入金鑰")
-        else: st.error(f"📂 找不到講義：{filename}")
+                    st.rerun() 
+                except Exception as e:
+                    st.error(f"❌ 發生錯誤：{e}")
+        elif not user_key:
+            st.warning("🔑 請先輸入實驗室啟動金鑰。")
+        else:
+            st.error(f"📂 找不到講義文件：{filename}")
 
-else:
-    # 狀態：上課中
-    st.success("🔔 曉臻老師正在上課中！")
-    if "audio_html" in st.session_state: 
-        st.markdown(st.session_state.audio_html, unsafe_allow_html=True) # 播放器置頂
     st.divider()
 
-    parts = [p.strip() for p in st.session_state.res_text.split("---PAGE_SEP---") if p.strip()] 
+    # 📸 2. 曉臻封面圖 (置底，修復圖片讀取錯誤)
+    cover_image_path = None
+    for ext in [".jpg", ".png", ".jpeg", ".JPG", ".PNG"]:
+        temp_path = os.path.join("data", f"cover{ext}")
+        if os.path.exists(temp_path):
+            cover_image_path = temp_path
+            break
+            
+    if cover_image_path:
+        try:
+            st.image(Image.open(cover_image_path), use_container_width=True)
+        except Exception:
+            st.info("🏃‍♀️ 曉臻老師正在操場跑步熱身中...")
+    else:
+        st.info("🏃‍♀️ 曉臻老師正在起跑線上準備中...")
+
+else:
+    # 狀態 B: 上課中顯示
+    st.success("🔔 曉臻老師正在上課中！")
+    if "audio_html" in st.session_state: 
+        st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
+    st.divider()
+
+    raw_text = st.session_state.get("res_text", "").replace('\u00a0', ' ')
+    parts = [p.strip() for p in raw_text.split("---PAGE_SEP---") if p.strip()] 
+
     if len(parts) > 0:
-        with st.chat_message("曉臻"): st.markdown(clean_for_eye(parts[0])) # 翩翩體開場
+        with st.chat_message("曉臻"): 
+            st.markdown(clean_for_eye(parts[0]))
 
     for i, (p_num, img) in enumerate(st.session_state.display_images):
-        st.image(img, caption=f"🏁 第 {p_num} 頁", use_container_width=True)
+        st.image(img, caption=f"🏁 第 {p_num} 頁講義", use_container_width=True)
         if (i + 1) < len(parts):
-            st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b><br>{clean_for_eye(parts[i+1])}</div>', unsafe_allow_html=True)
+            # 文字本體拆出 HTML 外，保護 LaTeX 渲染
+            with st.container():
+                st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b></div>', unsafe_allow_html=True)
+                st.markdown(clean_for_eye(parts[i+1]))
         st.divider()
 
-    if st.button("🏁 下課休息"):
+    if st.button("🏁 下課休息 (回到首頁)"):
         st.session_state.class_started = False
         st.rerun()
