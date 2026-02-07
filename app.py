@@ -76,7 +76,7 @@ async def generate_voice_base64(text):
     clean_text = clean_text.replace("[[VOICE_START]]", "").replace("[[VOICE_END]]", "")
     
     # 只洗掉會讓語音引擎當機的特殊符號，保留標點符號讓曉臻有停頓感
-    clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～（） ]', '', clean_text)
+    clean_text = re.sub(r'[<>#@*_=]', '', clean_text)
     
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
