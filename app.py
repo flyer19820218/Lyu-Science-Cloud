@@ -21,14 +21,21 @@ st.markdown("""
         background-color: #ffffff !important; 
     }
     
-    /* 2. 空間與邊距調整 */
-    div.block-container { padding-top: 1rem !important; padding-bottom: 2rem !important; }
-    section[data-testid="stSidebar"] > div { padding-top: 1rem !important; }
-    [data-testid="stSidebar"] { min-width: 320px !important; max-width: 320px !important; }
-    header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1 !important; }
-    button[data-testid="stSidebarCollapseButton"] { color: #000000 !important; display: block !important; }
+    /* 2. 🚨 翩翩體強勢鎖定：涵蓋所有顯示文字、按鈕與標籤 */
+    html, body, .stMarkdown, p, label, li, h1, h2, h3, .stButton button, a, div, span {
+        color: #000000 !important;
+        font-family: 'HanziPen SC', '翩翩體', 'Comic Sans MS', cursive, sans-serif !important;
+    }
 
-    /* 3. 🚨 暴力拔除標籤方框 (起始頁碼、冊別等標籤) */
+    /* 3. 按鈕視覺優化 */
+    .stButton button {
+        border: 2px solid #000000 !important;
+        background-color: #ffffff !important;
+        font-weight: bold !important;
+        font-family: 'HanziPen SC', '翩翩體' !important;
+    }
+
+    /* 4. 暴力拔除所有預設標籤方框 (保護潔淨排版) */
     [data-testid="stWidgetLabel"] div, [data-testid="stWidgetLabel"] p {
         background-color: transparent !important;
         border: none !important;
@@ -36,22 +43,15 @@ st.markdown("""
         padding: 0 !important;
     }
 
-    /* 4. 字體規範：全黑翩翩體 */
-    html, body, .stMarkdown, p, label, li, h1, h2, h3, .stButton button, a {
-        color: #000000 !important;
-        font-family: 'HanziPen SC', '翩翩體', sans-serif !important;
+    /* 5. 逐字稿區塊 */
+    .transcript-box { 
+        background-color: #fdfdfd; 
+        border-left: 5px solid #000; 
+        padding: 15px; 
+        margin-bottom: 25px; 
+        line-height: 1.6;
+        font-family: 'HanziPen SC', '翩翩體' !important;
     }
-
-    .stButton button {
-        border: 2px solid #000000 !important;
-        background-color: #ffffff !important;
-        font-weight: bold !important;
-    }
-
-    /* 5. 區塊樣式 */
-    .info-box { border: 1px solid #ddd; padding: 1rem; border-radius: 8px; background-color: #f9f9f9; font-size: 0.9rem; color: #000; }
-    .guide-box { border: 2px dashed #01579b; padding: 1rem; border-radius: 12px; background-color: #f0f8ff; color: #000; }
-    .transcript-box { background-color: #fdfdfd; border-left: 5px solid #000; padding: 15px; margin-bottom: 25px; line-height: 1.6; }
     </style>
 """, unsafe_allow_html=True)
 
