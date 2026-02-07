@@ -155,18 +155,22 @@ SYSTEM_PROMPT = r"""
    - ⚠️ 每一頁解說必須超過 250 字，包含實驗細節、圖表數值解析與觀念推導。
    - 每一頁內容解說完畢後，必須進行該頁的「知識點總結」與「常見考點提醒」。
 
-2. 【顯示稿規範 (學生看的)】：
-   - 所有導讀聲音內容，必須「百分之百」包裹在 [[VOICE_START]] 與 [[VOICE_END]] 之間。
-   - 範例：藍色硫酸銅晶體 $$CuSO_{4} \cdot 5H_{2}O$$。
-   - ⚠️ 嚴禁出現「～～」。化學式必須使用標準 LaTeX。
-   - ⚠️ 反應式範例 (電解水)：$$2H_{2}O \xrightarrow{電解} 2H_{2} + O_{2}$$
-   - ⚠️ 電離反應範例 (硫酸)：$$H_{2}SO_{4} \rightarrow 2H^{+} + SO_{4}^{2-}$$
+# --- 4. 曉臻教學核心指令 (修復版：標題與內容不消失) ---
+SYSTEM_PROMPT = r"""
+你是資深自然科學助教曉臻。你現在要進行深度講義導讀。
 
-3. 【隱藏讀音稿規範 (曉臻唸的)】：
-   - ⚠️ 必須包裹在 [[VOICE_START]] 與 [[VOICE_END]] 之間。
-   - ⚠️ 慢速標記：字母、數字後必加「～～」。
-   - ⚠️ 結晶水規範：點號（·）必須翻譯為『帶 X 個結晶水』。
-   - 範例：[[VOICE_START]] 這是 C～～ u～～ S～～ O～～ four～～ 帶五個結晶水，也就是硫酸銅晶體 [[VOICE_END]]
+2. ⚠️【顯示稿規範】：
+   - 每一頁必須包含這三個標題與內容：【曉臻老師上課逐字說明】、【知識點總結】、【常見考點提醒】。
+   - 這三個標題與其內容「絕對禁止」放入 [[VOICE_START]] 標籤中，必須留在標籤外面。
+   - 化學式與反應式必須使用標準 LaTeX，且嚴禁出現「～～」。
+   - 範例：$$2H_{2}O \xrightarrow{電解} 2H_{2} + O_{2}$$
+
+3. ⚠️【隱藏讀音稿規範】：
+   - 這是你要唸出來的文字，必須「百分之百」包裹在 [[VOICE_START]] 與 [[VOICE_END]] 之間。
+   - 內容要包含上述所有顯示稿的口語化版本，並加上慢速標記（如 C～～ u～～）。
+   - 結晶水標記（·）必須讀作『帶 X 個結晶水』。
+   - 範例：[[VOICE_START]] 同學們看這張圖，這是 C～～ u～～ S～～ O～～ four～～ 帶五個結晶水... [[VOICE_END]]
+
 
 4. 【互動與開場】：
    - 開場必從【曉臻科學小知識庫】隨機選取一則，並連結至今日課程。
@@ -244,25 +248,26 @@ if not st.session_state.class_started:
                     
                     genai.configure(api_key=user_key)
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
-                    # --- 第 231 行開始貼上：影分身拆分手術 ---
-                    res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
-                    
+                   
                     # 🔴 專家核心邏輯：物理洗淨編碼並分離顯示與讀音
                     raw_res = res.text.replace('\u00a0', ' ')
 
-                    # 1. 影分身：提取 [[VOICE_START]] 到 [[VOICE_END]] 之間的隱藏讀音內容
-                    # re.DOTALL 確保即便內容跨行也能完整抓取
+                    # 1. 影分身：提取 [[VOICE_START]] 讀音內容 (給耳朵聽)
                     voice_matches = re.findall(r'\[\[VOICE_START\]\](.*?)\[\[VOICE_END\]\]', raw_res, re.DOTALL)
-                    voice_full_text = " ".join(voice_matches) if voice_matches else raw_res
+                    if voice_matches:
+                        voice_full_text = " ".join(voice_matches)
+                    else:
+                        # 備援方案：若 AI 忘記貼標籤，就洗掉標籤字眼唸全文
+                        voice_full_text = raw_res.replace('[[VOICE_START]]', '').replace('[[VOICE_END]]', '')
 
-                    # 2. 產生語音 (這裡會包含結晶水、之、以及所有慢速標記)
                     st.session_state.audio_html = asyncio.run(generate_voice_base64(voice_full_text))
 
-                    # 3. 顯示稿 (挖掉所有隱藏標籤，只留下乾淨的 LaTeX 內容)
-                    # 這樣就不會再出現慘不忍睹的 $$$$ 亂碼了
+                    # 2. 影分身：提取顯示稿 (給眼睛看，解決文字消失與 $$$$ 亂碼)
+                    # 動作：精確挖掉標籤內的所有內容，留下標籤外的文字
                     display_res = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', raw_res, flags=re.DOTALL)
-                    st.session_state.res_text = display_res
-                    
+                    st.session_state.res_text = display_res # 這是學生看到的漂亮文字稿
+
+                    # --- 以下維持原本之內容 ---
                     st.session_state.display_images = display_images_list
                     st.session_state.class_started = True
                     st.rerun()
