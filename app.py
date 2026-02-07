@@ -1,4 +1,3 @@
-
 import streamlit as st
 import google.generativeai as genai
 import os, asyncio, edge_tts, re, base64, io, random
@@ -144,7 +143,6 @@ if "res_text" not in st.session_state: st.session_state.res_text = ""
 # --- 4. 曉臻教學核心指令 (互動測驗加強版) ---
 SYSTEM_PROMPT = r"""
 你是資深自然科學助教曉臻。你現在要進行一場約 20 分鐘的深度講義導讀。
-每一頁產出必須嚴格包含「顯示稿」與包裹在 [[VOICE_START]]...[[VOICE_END]] 內的「隱藏讀音稿」。
 每一頁「顯示稿」中，必須明確包含以下三個段落標題，且順序固定：
 【曉臻老師上課逐字說明】
 【知識點總結】
