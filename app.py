@@ -117,7 +117,6 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-user_key = st.sidebar.text_input("🔑 實驗室啟動金鑰", type="password", key="tower_key")
 st.sidebar.divider()
 st.sidebar.subheader("💬 曉臻問題箱")
 student_q = st.sidebar.text_input("打字問曉臻：", key="science_q")
