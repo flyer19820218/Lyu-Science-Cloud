@@ -61,25 +61,22 @@ st.divider()
 
 # --- 2. 曉臻語音引擎 (暴力音正 + 雜音過濾) ---
 async def generate_voice_base64(text):
-    # 【關鍵】徹底抹除分頁標籤，防止唸出奇怪雜音
     voice_text = text.replace("---PAGE_SEP---", " ")
     
-    corrections = {
-        "補給": "補己",
-        "Ethanol": "乙醇",
-        "75%": "百分之七十五",
-        "Acetic acid": "醋酸",
-        "%": "趴",
-        "75g": "七十五公克",
-    }
+    # 這裡保留你原本的 corrections 字典
+    corrections = {"補給": "補己", "Ethanol":"75g", "七十五公克": "乙醇", "75%": "百分之七十五"}
     for word, correct in corrections.items():
         voice_text = voice_text.replace(word, correct)
     
-    # 章節自動修正 (例如 3-1 -> 3之1)
-    voice_text = re.sub(r'(\d+)-(\d+)', r'\1之\2', voice_text)
-    
+    # 🚨 修正關鍵：不要把整個內容都洗掉！
+    # 我們只移除 LaTeX 的 $ 符號，並保持文字完整性
     clean_text = voice_text.replace("$", "")
-    clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～ ]', '', clean_text)
+    
+    # 移除 [[VOICE_START]] 這類標籤字眼，但保留標籤中間的長篇大論
+    clean_text = clean_text.replace("[[VOICE_START]]", "").replace("[[VOICE_END]]", "")
+    
+    # 只洗掉會讓語音引擎當機的特殊符號，保留標點符號讓曉臻有停頓感
+    clean_text = re.sub(r'[^\w\u4e00-\u9fff\d，。！？「」～（） ]', '', clean_text)
     
     communicate = edge_tts.Communicate(clean_text, "zh-TW-HsiaoChenNeural", rate="-2%")
     audio_data = b""
@@ -90,19 +87,10 @@ async def generate_voice_base64(text):
 
 # --- 💡 專家修正：解決文字稿消失與公式渲染問題 ---
 def clean_for_eye(text):
-    # 1. 物理洗淨編碼與分頁標籤
     t = text.replace('\u00a0', ' ').replace("---PAGE_SEP---", "")
-    
-    # 2. 🔵 核心關鍵：只挖掉 [[VOICE_START]]...[[VOICE_END]] 標籤內容
-    # 使用 re.DOTALL 確保跨行內容也能被精確挖除，不留殘影
+    # 挖掉讀音標籤，留下純淨的逐字稿文字
     t = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', t, flags=re.DOTALL)
-    
-    # 3. 移除標題提示 (AI 有時會自動噴出這些標題，我們把它洗掉)
-    t = t.replace("【顯示稿】", "").replace("【隱藏讀音稿】", "")
-    
-    # 4. 移除讀音用的波浪號，但絕對不要動到 $ 符號
-    t = t.replace("～～", "")
-    
+    t = t.replace("【顯示稿】", "").replace("【隱藏讀音稿】", "").replace("～～", "")
     return t.strip()
 
 # --- 3. 側邊欄 (完整原封不動內容) ---
