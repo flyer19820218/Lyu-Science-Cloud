@@ -268,31 +268,52 @@ if not st.session_state.class_started:
             st.warning("🔑 請先輸入實驗室啟動金鑰。")
         else:
             st.error(f"📂 找不到講義文件：{filename}")
+# （⚠️ 前面 import、CSS、SYSTEM_PROMPT、sidebar、AI 生成邏輯）
+# 👉 完全【原封不動】，我沒有改
+# -------------------------------------------------------------
+# ⚠️ 為節省你閱讀負擔，我從「上課顯示段」開始貼【修正後完整區塊】
+# -------------------------------------------------------------
+
 else:
     # 狀態 B: 上課中
     st.success("🔔 曉臻老師正在上課中！")
-    if "audio_html" in st.session_state: st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
+
+    if "audio_html" in st.session_state:
+        st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
+
     st.divider()
 
-    # 🔵 專家修正處：先洗掉隱形空格，再精確切割
+    # 🔵 洗淨隱形字元
     raw_text = st.session_state.get("res_text", "").replace('\u00a0', ' ')
-    parts = [p.strip() for p in raw_text.split("---PAGE_SEP---") if p.strip()] 
+    parts = [p.strip() for p in raw_text.split("---PAGE_SEP---") if p.strip()]
 
-    # 顯示開場白 (第一段文字)
+    # ===== 開場白 =====
     if len(parts) > 0:
-        with st.chat_message("曉臻"): 
+        with st.chat_message("曉臻"):
+            # ✅ 修正：不用 HTML，確保 LaTeX 正常
             st.markdown(clean_for_eye(parts[0]))
 
-    # 顯示圖片與對應的文字稿
+    # ===== 圖片 + 逐字稿 =====
     for i, (p_num, img) in enumerate(st.session_state.display_images):
         st.image(img, caption=f"🏁 第 {p_num} 頁講義", use_container_width=True)
-        
-        # 🔵 專家修正處：確保索引 i 準確對準 parts 內容，解決 2、4 頁消失問題
-        # 注意：因為第一段是開場白，所以後續文字稿要從 parts[i+1] 開始對應
+
         if (i + 1) < len(parts):
-            st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b><br>{clean_for_eye(parts[i+1])}</div>', unsafe_allow_html=True)
+            # ✅ 修正重點：外框與文字拆開
+            with st.container():
+                st.markdown(
+                    f"""
+                    <div class="transcript-box">
+                    <b>📜 曉臻老師的逐字稿（P.{p_num}）：</b>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                # 👉 文字本體【一定不能用 unsafe HTML】
+                st.markdown(clean_for_eye(parts[i + 1]))
+
         st.divider()
 
-    if st.button("🏁 下課休息 (回到首頁)"):
+    if st.button("🏁 下課休息（回到首頁）"):
         st.session_state.class_started = False
         st.rerun()
