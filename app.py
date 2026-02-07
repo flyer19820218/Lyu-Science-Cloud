@@ -142,7 +142,7 @@ if "display_images" not in st.session_state: st.session_state.display_images = [
 if "res_text" not in st.session_state: st.session_state.res_text = ""
    
 # --- 4. 曉臻教學核心指令 (互動測驗加強版) ---
-SYSTEM_PROMPT = """
+SYSTEM_PROMPT = r"""
 你是資深自然科學助教曉臻。你現在要進行一場約 20 分鐘的深度講義導讀。
 每一頁產出必須嚴格包含「顯示稿」與包裹在 [[VOICE_START]]...[[VOICE_END]] 內的「隱藏讀音稿」。
 
