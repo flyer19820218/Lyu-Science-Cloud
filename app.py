@@ -201,13 +201,17 @@ filename = f"{vol_select}_{chap_select}.pdf"
 pdf_path = os.path.join("data", filename)
 
 # --- 主畫面邏輯 ---
+# --- 這裡確保你的字體與視覺設定依然存在 (CSS 部分) ---
+# (請確認你程式碼最上方的 <style> 標籤內有保留 'HanziPen SC' 或 '翩翩體')
+
 if not st.session_state.class_started:
-    # 🚀 1. 開始按鈕 (主動作置頂)
+    # 🚀 1. 開始按鈕 (置頂行動)
     st.divider()
     if st.button(f"🏃‍♀️點擊-開始今天的ai自然課程", type="primary", use_container_width=True):
         if user_key and os.path.exists(pdf_path):
             with st.spinner("曉臻正在超音速備課中..."):
                 try:
+                    # 圖片讀取邏輯
                     doc = fitz.open(pdf_path)
                     images_to_process, display_images_list = [], []
                     pages_to_read = range(start_page - 1, min(start_page + 4, len(doc)))
@@ -219,22 +223,24 @@ if not st.session_state.class_started:
                     
                     genai.configure(api_key=user_key)
                     MODEL = genai.GenerativeModel('models/gemini-2.5-flash') 
-                    
-                    # 生成內容：解決 res is not defined 錯誤
                     res = MODEL.generate_content([f"{SYSTEM_PROMPT}\n導讀P.{start_page}起內容。"] + images_to_process)
+                    
+                    # 🔴 影分身雙保險邏輯：修復文字消失與聲音斷訊
                     raw_res = res.text.replace('\u00a0', ' ')
                     
-                    # 🔴 影分身核心邏輯：修復縮進與語音抓取
+                    # A. 提取語音 (給耳朵聽)
                     voice_matches = re.findall(r'\[\[VOICE_START\]\](.*?)\[\[VOICE_END\]\]', raw_res, re.DOTALL)
                     if voice_matches:
                         voice_full_text = " ".join(voice_matches)
                     else:
                         voice_full_text = raw_res.replace('[[VOICE_START]]', '').replace('[[VOICE_END]]', '')
-                    
                     st.session_state.audio_html = asyncio.run(generate_voice_base64(voice_full_text))
                     
-                    # 提取顯示稿：解決 $$$$ 亂碼
-                    display_res = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', raw_res, flags=re.DOTALL)
+                    # B. 提取顯示稿 (給眼睛看)：只有存在標籤時才進行挖除，防止文字整段消失
+                    if "[[VOICE_START]]" in raw_res:
+                        display_res = re.sub(r'\[\[VOICE_START\]\].*?\[\[VOICE_END\]\]', '', raw_res, flags=re.DOTALL)
+                    else:
+                        display_res = raw_res
                     st.session_state.res_text = display_res 
                     
                     st.session_state.display_images = display_images_list
@@ -248,26 +254,18 @@ if not st.session_state.class_started:
             st.error(f"📂 找不到講義文件：{filename}")
 
     st.divider()
-
-    # 📸 2. 曉臻封面圖 (置底，修復圖片讀取錯誤)
+    # 📸 曉臻封面圖 (置底)
     cover_image_path = None
     for ext in [".jpg", ".png", ".jpeg", ".JPG", ".PNG"]:
         temp_path = os.path.join("data", f"cover{ext}")
-        if os.path.exists(temp_path):
-            cover_image_path = temp_path
-            break
-            
+        if os.path.exists(temp_path): cover_image_path = temp_path; break
     if cover_image_path:
-        try:
-            st.image(Image.open(cover_image_path), use_container_width=True)
-        except Exception:
-            st.info("🏃‍♀️ 曉臻老師正在操場跑步熱身中...")
-    else:
-        st.info("🏃‍♀️ 曉臻老師正在起跑線上準備中...")
+        st.image(Image.open(cover_image_path), use_container_width=True)
 
 else:
-    # 狀態 B: 上課中顯示
+    # 狀態 B: 上課中顯示區
     st.success("🔔 曉臻老師正在上課中！")
+    # 🔊 播放鍵回歸置頂
     if "audio_html" in st.session_state: 
         st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
     st.divider()
@@ -277,12 +275,13 @@ else:
 
     if len(parts) > 0:
         with st.chat_message("曉臻"): 
+            # 💡 這裡會套用你的翩翩體 CSS
             st.markdown(clean_for_eye(parts[0]))
 
     for i, (p_num, img) in enumerate(st.session_state.display_images):
         st.image(img, caption=f"🏁 第 {p_num} 頁講義", use_container_width=True)
         if (i + 1) < len(parts):
-            # 文字本體拆出 HTML 外，保護 LaTeX 渲染
+            # 🔵 分頁文字：將 HTML 標籤與內容分離，保護 LaTeX 渲染與字體樣式
             with st.container():
                 st.markdown(f'<div class="transcript-box"><b>📜 曉臻老師的逐字稿 (P.{p_num})：</b></div>', unsafe_allow_html=True)
                 st.markdown(clean_for_eye(parts[i+1]))
